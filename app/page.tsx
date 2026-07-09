@@ -1,65 +1,409 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import Papa from "papaparse";
+import type {
+  SearchResult,
+  EnrichmentResult,
+  EnrichedRow,
+  ScrapeStatus,
+} from "@/lib/types";
+
+type Stage = "search" | "results" | "enriched";
 
 export default function Home() {
+  const [stage, setStage] = useState<Stage>("search");
+  const [query, setQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [enriching, setEnriching] = useState(false);
+  const [enrichProgress, setEnrichProgress] = useState<{
+    done: number;
+    total: number;
+  }>({ done: 0, total: 0 });
+  const [enriched, setEnriched] = useState<EnrichedRow[]>([]);
+
+  async function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    if (!query.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "erro na busca");
+      setResults(data.results ?? []);
+      setSelected(new Set());
+      setStage("results");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "erro desconhecido");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  function selectAll() {
+    setSelected(new Set(results.map((r) => r.placeId)));
+  }
+  function selectNone() {
+    setSelected(new Set());
+  }
+
+  async function handleEnrich() {
+    const items = results.filter((r) => selected.has(r.placeId));
+    if (items.length === 0) return;
+    setEnriching(true);
+    setError(null);
+    setEnrichProgress({ done: 0, total: items.length });
+
+    const CHUNK = 10;
+    const allEnrichments: EnrichmentResult[] = [];
+
+    for (let i = 0; i < items.length; i += CHUNK) {
+      const chunk = items.slice(i, i + CHUNK).map((r) => ({
+        placeId: r.placeId,
+        website: r.website,
+      }));
+      try {
+        const res = await fetch("/api/enrich", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items: chunk }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "erro no enrich");
+        allEnrichments.push(...(data.results ?? []));
+        setEnrichProgress({
+          done: Math.min(i + CHUNK, items.length),
+          total: items.length,
+        });
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "erro desconhecido");
+        setEnriching(false);
+        return;
+      }
+    }
+
+    const map = new Map(allEnrichments.map((e) => [e.placeId, e]));
+    const rows: EnrichedRow[] = items.map((r) => {
+      const en = map.get(r.placeId) ?? {
+        placeId: r.placeId,
+        email: null,
+        whatsapp: null,
+        instagram: null,
+        scrapeStatus: "empty" as ScrapeStatus,
+      };
+      return { ...r, ...en };
+    });
+
+    setEnriched(rows);
+    setEnriching(false);
+    setStage("enriched");
+  }
+
+  function exportCsv() {
+    const csv = Papa.unparse(
+      enriched.map((r) => ({
+        Nome: r.name,
+        Categoria: r.category,
+        Endereco: r.address,
+        Telefone: r.phone ?? "",
+        Email: r.email ?? "",
+        WhatsApp: r.whatsapp ?? "",
+        Instagram: r.instagram ?? "",
+        Site: r.website ?? "",
+        Rating: r.rating ?? "",
+        Reviews: r.reviewCount ?? "",
+        Status: r.scrapeStatus,
+        GoogleMaps: r.googleMapsUri ?? "",
+      })),
+    );
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex-1 flex flex-col">
+      <header className="border-b border-neutral-800 bg-neutral-950/95 backdrop-blur sticky top-0 z-10">
+        <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
+          <h1 className="text-lg font-semibold tracking-tight text-neutral-50">
+            Klicka Prospect
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+          <span className="text-xs text-neutral-500">Lead Extractor v0</span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      </header>
+
+      <div className="mx-auto w-full max-w-6xl px-6 py-8 flex-1">
+        {error && (
+          <div className="mb-4 rounded border border-red-800 bg-red-950/60 text-red-200 px-4 py-3 text-sm">
+            {error}
+          </div>
+        )}
+
+        {stage === "search" && (
+          <form
+            onSubmit={handleSearch}
+            className="mx-auto max-w-2xl mt-16"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+            <label className="block text-sm font-medium text-neutral-300 mb-2">
+              Buscar estabelecimentos
+            </label>
+            <div className="flex gap-2">
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Ex: Dentistas Niterói"
+                className="flex-1 rounded border border-neutral-700 bg-neutral-900 text-neutral-100 placeholder:text-neutral-500 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                autoFocus
+              />
+              <button
+                type="submit"
+                disabled={loading || !query.trim()}
+                className="rounded bg-purple-500 hover:bg-purple-400 disabled:opacity-40 disabled:cursor-not-allowed text-white px-6 py-3 font-semibold transition-colors shadow-lg shadow-purple-500/20"
+              >
+                {loading ? "Buscando..." : "Buscar"}
+              </button>
+            </div>
+            <p className="mt-3 text-xs text-neutral-400">
+              Tipo de estabelecimento + cidade ou bairro. Até 60 resultados
+              por busca.
+            </p>
+          </form>
+        )}
+
+        {stage === "results" && (
+          <div>
+            <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
+              <div className="text-sm text-neutral-300">
+                <span className="font-semibold text-neutral-100">
+                  {results.length}
+                </span>{" "}
+                resultados.{" "}
+                <span className="font-semibold text-neutral-100">
+                  {selected.size}
+                </span>{" "}
+                selecionados.
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setStage("search")}
+                  className="text-sm px-3 py-1.5 border border-neutral-700 text-neutral-200 rounded hover:bg-neutral-800 transition-colors"
+                >
+                  Nova busca
+                </button>
+                <button
+                  onClick={selectAll}
+                  className="text-sm px-3 py-1.5 border border-neutral-700 text-neutral-200 rounded hover:bg-neutral-800 transition-colors"
+                >
+                  Todos
+                </button>
+                <button
+                  onClick={selectNone}
+                  className="text-sm px-3 py-1.5 border border-neutral-700 text-neutral-200 rounded hover:bg-neutral-800 transition-colors"
+                >
+                  Nenhum
+                </button>
+                <button
+                  onClick={handleEnrich}
+                  disabled={enriching || selected.size === 0}
+                  className="text-sm px-4 py-1.5 bg-purple-500 hover:bg-purple-400 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded font-semibold shadow-lg shadow-purple-500/20 transition-colors"
+                >
+                  {enriching
+                    ? `Extraindo ${enrichProgress.done}/${enrichProgress.total}...`
+                    : `Extrair contatos (${selected.size})`}
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded border border-neutral-800 bg-neutral-900">
+              <table className="min-w-full text-sm">
+                <thead className="bg-neutral-800/50 text-neutral-300">
+                  <tr>
+                    <th className="px-3 py-2 text-left w-8"></th>
+                    <th className="px-3 py-2 text-left">Nome</th>
+                    <th className="px-3 py-2 text-left">Categoria</th>
+                    <th className="px-3 py-2 text-left">Endereço</th>
+                    <th className="px-3 py-2 text-left">Rating</th>
+                    <th className="px-3 py-2 text-left">Telefone</th>
+                    <th className="px-3 py-2 text-left">Site</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="px-3 py-8 text-center text-neutral-500"
+                      >
+                        Nenhum resultado.
+                      </td>
+                    </tr>
+                  )}
+                  {results.map((r) => (
+                    <tr
+                      key={r.placeId}
+                      className="border-t border-neutral-800 hover:bg-neutral-800/40 cursor-pointer transition-colors"
+                      onClick={() => toggleSelect(r.placeId)}
+                    >
+                      <td
+                        className="px-3 py-2"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selected.has(r.placeId)}
+                          onChange={() => toggleSelect(r.placeId)}
+                          className="cursor-pointer accent-purple-500"
+                        />
+                      </td>
+                      <td className="px-3 py-2 font-medium text-neutral-100">
+                        {r.name}
+                      </td>
+                      <td className="px-3 py-2 text-neutral-400">
+                        {r.category}
+                      </td>
+                      <td className="px-3 py-2 text-neutral-400 max-w-xs truncate">
+                        {r.address}
+                      </td>
+                      <td className="px-3 py-2 text-neutral-400">
+                        {r.rating != null ? `★ ${r.rating.toFixed(1)}` : ""}
+                        {r.reviewCount != null ? ` (${r.reviewCount})` : ""}
+                      </td>
+                      <td className="px-3 py-2 text-neutral-400">
+                        {r.phone ?? ""}
+                      </td>
+                      <td
+                        className="px-3 py-2 text-neutral-400 max-w-xs truncate"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {r.website ? (
+                          <a
+                            href={r.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-purple-400 hover:text-purple-300 hover:underline"
+                          >
+                            {r.website}
+                          </a>
+                        ) : (
+                          ""
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {stage === "enriched" && (
+          <div>
+            <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
+              <div className="text-sm text-neutral-300">
+                <span className="font-semibold text-neutral-100">
+                  {enriched.length}
+                </span>{" "}
+                leads extraídos.
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  onClick={() => setStage("results")}
+                  className="text-sm px-3 py-1.5 border border-neutral-700 text-neutral-200 rounded hover:bg-neutral-800 transition-colors"
+                >
+                  Voltar
+                </button>
+                <button
+                  onClick={exportCsv}
+                  className="text-sm px-4 py-1.5 bg-purple-500 hover:bg-purple-400 text-white rounded font-semibold shadow-lg shadow-purple-500/20 transition-colors"
+                >
+                  Exportar CSV
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded border border-neutral-800 bg-neutral-900">
+              <table className="min-w-full text-sm">
+                <thead className="bg-neutral-800/50 text-neutral-300">
+                  <tr>
+                    <th className="px-3 py-2 text-left">Nome</th>
+                    <th className="px-3 py-2 text-left">Telefone</th>
+                    <th className="px-3 py-2 text-left">Email</th>
+                    <th className="px-3 py-2 text-left">WhatsApp</th>
+                    <th className="px-3 py-2 text-left">Instagram</th>
+                    <th className="px-3 py-2 text-left">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {enriched.map((r) => (
+                    <tr
+                      key={r.placeId}
+                      className="border-t border-neutral-800"
+                    >
+                      <td className="px-3 py-2 font-medium text-neutral-100">
+                        {r.name}
+                      </td>
+                      <td className="px-3 py-2 text-neutral-300">
+                        {r.phone ?? ""}
+                      </td>
+                      <td className="px-3 py-2 text-neutral-300">
+                        {r.email ?? ""}
+                      </td>
+                      <td className="px-3 py-2 text-neutral-300">
+                        {r.whatsapp ?? ""}
+                      </td>
+                      <td className="px-3 py-2 text-neutral-300">
+                        {r.instagram ?? ""}
+                      </td>
+                      <td className="px-3 py-2">
+                        <StatusBadge status={r.scrapeStatus} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
+  );
+}
+
+function StatusBadge({ status }: { status: ScrapeStatus }) {
+  const config: Record<ScrapeStatus, { label: string; cls: string }> = {
+    ok: { label: "ok", cls: "bg-green-500/15 text-green-300 border border-green-500/30" },
+    empty: { label: "sem dado", cls: "bg-amber-500/15 text-amber-300 border border-amber-500/30" },
+    no_website: {
+      label: "sem site",
+      cls: "bg-neutral-700/50 text-neutral-300 border border-neutral-600",
+    },
+    timeout: { label: "timeout", cls: "bg-red-500/15 text-red-300 border border-red-500/30" },
+    parse_failed: { label: "falhou", cls: "bg-red-500/15 text-red-300 border border-red-500/30" },
+  };
+  const c = config[status];
+  return (
+    <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${c.cls}`}>
+      {c.label}
+    </span>
   );
 }

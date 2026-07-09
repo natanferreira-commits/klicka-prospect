@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Klicka Prospect
 
-## Getting Started
+Lead extractor via Google Maps Places API + scraping HTML.
 
-First, run the development server:
+Ferramenta interna que transforma uma busca tipo "Dentistas Niterói" numa lista de leads B2B enriquecida com email, WhatsApp e Instagram, exportável em CSV pra cadência de outbound.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Ver [docs/PRD-lead-extractor.md](docs/PRD-lead-extractor.md) pro documento de produto completo.
+
+## Stack
+
+- Next.js 16 (App Router)
+- React 19
+- Tailwind CSS v4
+- TypeScript
+- cheerio (scraping HTML)
+- papaparse (export CSV)
+- Google Places API (New)
+
+## Setup local
+
+1. Instale as dependências (já feito no scaffold):
+   ```
+   npm install
+   ```
+
+2. Configure a chave da Google Places API:
+   - Crie projeto em [console.cloud.google.com](https://console.cloud.google.com/)
+   - Habilite **Places API (New)**
+   - Crie API key em **APIs & Services > Credentials**
+   - Restrinja a key: em **API restrictions**, marca só Places API (New)
+   - Em **Billing > Budgets & alerts**, seta teto de $50/mês com alerta em $25
+   - Cole a chave em `.env.local`:
+     ```
+     GOOGLE_MAPS_API_KEY=xxx
+     ```
+
+3. Rode local:
+   ```
+   npm run dev
+   ```
+   Abre em [http://localhost:3000](http://localhost:3000).
+
+## Deploy na Vercel
+
+1. Push do repo no GitHub
+2. Em [vercel.com/new](https://vercel.com/new), importa o repo
+3. Em **Environment Variables**, adiciona `GOOGLE_MAPS_API_KEY` com o valor
+4. Deploy
+
+Tier Hobby serve pro MVP (limite de 10s por API route). Se precisar de scrapes maiores, migra pra Pro (60s).
+
+## Estrutura
+
+```
+app/
+  api/
+    search/route.ts       POST: busca no Places API
+    enrich/route.ts       POST: scraping dos sites em lote
+  layout.tsx
+  page.tsx                Página única com 3 estados: search, results, enriched
+lib/
+  types.ts                tipos compartilhados
+  places.ts               cliente Google Places API (New)
+  url-classifier.ts       classifica URL: website, insta, wa, linktree, etc
+  scraper.ts              scraper com cheerio + regex
+docs/
+  PRD-lead-extractor.md
+  PRD-lead-extractor.pdf
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Uso
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Digita `Dentistas Niterói` (ou qualquer tipo + cidade/bairro)
+2. Marca os que interessam
+3. Clica em **Extrair contatos**
+4. Exporta CSV
