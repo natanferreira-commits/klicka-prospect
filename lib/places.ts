@@ -1,6 +1,70 @@
 import type { SearchResult } from "./types";
 
 const ENDPOINT = "https://places.googleapis.com/v1/places:searchText";
+const AUTOCOMPLETE_ENDPOINT =
+  "https://places.googleapis.com/v1/places:autocomplete";
+
+export type LocationSuggestion = {
+  placeId: string;
+  mainText: string;
+  secondaryText: string;
+  fullText: string;
+};
+
+export async function autocompleteLocation(
+  input: string,
+  apiKey: string,
+): Promise<LocationSuggestion[]> {
+  const res = await fetch(AUTOCOMPLETE_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+    },
+    body: JSON.stringify({
+      input,
+      includedRegionCodes: ["br"],
+      languageCode: "pt-BR",
+      includedPrimaryTypes: [
+        "locality",
+        "sublocality",
+        "administrative_area_level_2",
+        "administrative_area_level_1",
+        "neighborhood",
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(
+      `Places Autocomplete ${res.status}: ${errText.slice(0, 500)}`,
+    );
+  }
+
+  type ApiSuggestion = {
+    placePrediction?: {
+      placeId?: string;
+      place?: string;
+      text?: { text?: string };
+      structuredFormat?: {
+        mainText?: { text?: string };
+        secondaryText?: { text?: string };
+      };
+    };
+  };
+
+  const data = (await res.json()) as { suggestions?: ApiSuggestion[] };
+  return (data.suggestions ?? [])
+    .map((s) => s.placePrediction)
+    .filter((p): p is NonNullable<ApiSuggestion["placePrediction"]> => !!p)
+    .map((p) => ({
+      placeId: p.placeId ?? p.place?.split("/").pop() ?? "",
+      mainText: p.structuredFormat?.mainText?.text ?? p.text?.text ?? "",
+      secondaryText: p.structuredFormat?.secondaryText?.text ?? "",
+      fullText: p.text?.text ?? "",
+    }));
+}
 
 const FIELD_MASK = [
   "places.id",

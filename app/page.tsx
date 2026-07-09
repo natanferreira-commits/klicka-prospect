@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Papa from "papaparse";
 import type {
   SearchResult,
@@ -8,12 +8,25 @@ import type {
   EnrichedRow,
   ScrapeStatus,
 } from "@/lib/types";
+import type { LocationSuggestion } from "@/lib/places";
 
 type Stage = "search" | "results" | "enriched";
 
+const VERTICAL_CHIPS = [
+  "Dentistas",
+  "Fisioterapeutas",
+  "Advocacia",
+  "Contabilidade",
+  "Pet Shop",
+  "Estética",
+];
+
 export default function Home() {
   const [stage, setStage] = useState<Stage>("search");
-  const [query, setQuery] = useState("");
+  const [whatQuery, setWhatQuery] = useState("");
+  const [whereQuery, setWhereQuery] = useState("");
+  const [whereSuggestions, setWhereSuggestions] = useState<LocationSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -25,16 +38,47 @@ export default function Home() {
   }>({ done: 0, total: 0 });
   const [enriched, setEnriched] = useState<EnrichedRow[]>([]);
 
+  useEffect(() => {
+    const trimmed = whereQuery.trim();
+    if (trimmed.length < 2) {
+      setWhereSuggestions([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/autocomplete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ input: trimmed }),
+        });
+        const data = await res.json();
+        if (res.ok) setWhereSuggestions(data.suggestions ?? []);
+      } catch {
+        // silent, autocomplete is best-effort
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [whereQuery]);
+
+  function selectSuggestion(s: LocationSuggestion) {
+    setWhereQuery(s.fullText);
+    setShowSuggestions(false);
+    setWhereSuggestions([]);
+  }
+
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    if (!query.trim()) return;
+    const what = whatQuery.trim();
+    const where = whereQuery.trim();
+    if (!what || !where) return;
     setLoading(true);
     setError(null);
     try {
+      const combinedQuery = `${what} em ${where}`;
       const res = await fetch("/api/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: query.trim() }),
+        body: JSON.stringify({ query: combinedQuery }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "erro na busca");
@@ -181,31 +225,93 @@ export default function Home() {
         {stage === "search" && (
           <form
             onSubmit={handleSearch}
-            className="mx-auto max-w-2xl mt-16"
+            className="mx-auto max-w-3xl mt-12"
           >
-            <label className="block text-sm font-medium text-neutral-300 mb-2">
-              Buscar estabelecimentos
-            </label>
-            <div className="flex gap-2">
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Ex: Dentistas Niterói"
-                className="flex-1 rounded border border-neutral-700 bg-neutral-900 text-neutral-100 placeholder:text-neutral-500 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                autoFocus
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  O que buscar
+                </label>
+                <input
+                  value={whatQuery}
+                  onChange={(e) => setWhatQuery(e.target.value)}
+                  placeholder="Ex: Dentistas"
+                  className="w-full rounded border border-neutral-700 bg-neutral-900 text-neutral-100 placeholder:text-neutral-500 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  autoFocus
+                />
+              </div>
+              <div className="relative">
+                <label className="block text-sm font-medium text-neutral-300 mb-2">
+                  Onde
+                </label>
+                <input
+                  value={whereQuery}
+                  onChange={(e) => {
+                    setWhereQuery(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() =>
+                    setTimeout(() => setShowSuggestions(false), 200)
+                  }
+                  placeholder="Ex: Niterói, RJ"
+                  className="w-full rounded border border-neutral-700 bg-neutral-900 text-neutral-100 placeholder:text-neutral-500 px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+                {showSuggestions && whereSuggestions.length > 0 && (
+                  <ul className="absolute top-full left-0 right-0 mt-1 bg-neutral-900 border border-neutral-700 rounded shadow-xl max-h-72 overflow-y-auto z-20">
+                    {whereSuggestions.map((s) => (
+                      <li key={s.placeId}>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => selectSuggestion(s)}
+                          className="w-full text-left px-4 py-2.5 hover:bg-neutral-800 border-b border-neutral-800 last:border-b-0 transition-colors"
+                        >
+                          <div className="text-neutral-100 text-sm font-medium">
+                            {s.mainText}
+                          </div>
+                          {s.secondaryText && (
+                            <div className="text-neutral-500 text-xs mt-0.5">
+                              {s.secondaryText}
+                            </div>
+                          )}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {VERTICAL_CHIPS.map((chip) => (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => setWhatQuery(chip)}
+                  className={`text-xs px-3 py-1.5 border rounded-full transition-colors ${
+                    whatQuery === chip
+                      ? "border-purple-500 bg-purple-500/10 text-purple-200"
+                      : "border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:border-neutral-600"
+                  }`}
+                >
+                  {chip}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-6 flex items-center gap-4">
               <button
                 type="submit"
-                disabled={loading || !query.trim()}
-                className="rounded bg-purple-500 hover:bg-purple-400 disabled:opacity-40 disabled:cursor-not-allowed text-white px-6 py-3 font-semibold transition-colors shadow-lg shadow-purple-500/20"
+                disabled={loading || !whatQuery.trim() || !whereQuery.trim()}
+                className="rounded bg-purple-500 hover:bg-purple-400 disabled:opacity-40 disabled:cursor-not-allowed text-white px-8 py-3 font-semibold transition-colors shadow-lg shadow-purple-500/20"
               >
                 {loading ? "Buscando..." : "Buscar"}
               </button>
+              <p className="text-xs text-neutral-500">
+                Até 60 resultados por busca.
+              </p>
             </div>
-            <p className="mt-3 text-xs text-neutral-400">
-              Tipo de estabelecimento + cidade ou bairro. Até 60 resultados
-              por busca.
-            </p>
           </form>
         )}
 
