@@ -115,8 +115,19 @@ export default function Home() {
     setStage("enriched");
   }
 
-  function exportCsv() {
-    const csv = Papa.unparse(
+  function downloadCsv(rows: Record<string, string | number>[], suffix: string) {
+    const csv = Papa.unparse(rows);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `leads-${suffix}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportCsvFull() {
+    downloadCsv(
       enriched.map((r) => ({
         Nome: r.name,
         Categoria: r.category,
@@ -131,14 +142,22 @@ export default function Home() {
         Status: r.scrapeStatus,
         GoogleMaps: r.googleMapsUri ?? "",
       })),
+      "completo",
     );
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  }
+
+  function exportCsvContacts() {
+    downloadCsv(
+      enriched
+        .filter((r) => r.phone || r.email || r.whatsapp)
+        .map((r) => ({
+          Nome: r.name,
+          Telefone: r.phone ?? "",
+          Email: r.email ?? "",
+          WhatsApp: r.whatsapp ?? "",
+        })),
+      "contatos",
+    );
   }
 
   return (
@@ -323,7 +342,10 @@ export default function Home() {
                 <span className="font-semibold text-neutral-100">
                   {enriched.length}
                 </span>{" "}
-                leads extraídos.
+                leads extraídos.{" "}
+                <span className="text-neutral-500">
+                  ({enriched.filter((r) => r.phone || r.email || r.whatsapp).length} com contato)
+                </span>
               </div>
               <div className="flex gap-2 flex-wrap">
                 <button
@@ -333,10 +355,18 @@ export default function Home() {
                   Voltar
                 </button>
                 <button
-                  onClick={exportCsv}
-                  className="text-sm px-4 py-1.5 bg-purple-500 hover:bg-purple-400 text-white rounded font-semibold shadow-lg shadow-purple-500/20 transition-colors"
+                  onClick={exportCsvFull}
+                  className="text-sm px-4 py-1.5 border border-purple-500/60 text-purple-200 rounded font-semibold hover:bg-purple-500/10 transition-colors"
+                  title="Exporta tudo: nome, endereço, categoria, telefone, email, whatsapp, instagram, site, rating, googlemaps"
                 >
-                  Exportar CSV
+                  CSV completo
+                </button>
+                <button
+                  onClick={exportCsvContacts}
+                  className="text-sm px-4 py-1.5 bg-purple-500 hover:bg-purple-400 text-white rounded font-semibold shadow-lg shadow-purple-500/20 transition-colors"
+                  title="Só Nome, Telefone, Email, WhatsApp. Pronto pra subir na ferramenta de marketing."
+                >
+                  CSV contatos
                 </button>
               </div>
             </div>
@@ -346,10 +376,13 @@ export default function Home() {
                 <thead className="bg-neutral-800/50 text-neutral-300">
                   <tr>
                     <th className="px-3 py-2 text-left">Nome</th>
+                    <th className="px-3 py-2 text-left">Categoria</th>
+                    <th className="px-3 py-2 text-left">Rating</th>
                     <th className="px-3 py-2 text-left">Telefone</th>
                     <th className="px-3 py-2 text-left">Email</th>
                     <th className="px-3 py-2 text-left">WhatsApp</th>
                     <th className="px-3 py-2 text-left">Instagram</th>
+                    <th className="px-3 py-2 text-left">Links</th>
                     <th className="px-3 py-2 text-left">Status</th>
                   </tr>
                 </thead>
@@ -357,24 +390,69 @@ export default function Home() {
                   {enriched.map((r) => (
                     <tr
                       key={r.placeId}
-                      className="border-t border-neutral-800"
+                      className="border-t border-neutral-800 hover:bg-neutral-800/30 transition-colors"
                     >
-                      <td className="px-3 py-2 font-medium text-neutral-100">
-                        {r.name}
+                      <td className="px-3 py-2 align-top">
+                        <div className="font-medium text-neutral-100">
+                          {r.name}
+                        </div>
+                        {r.address && (
+                          <div className="text-xs text-neutral-500 mt-0.5 max-w-xs truncate">
+                            {r.address}
+                          </div>
+                        )}
                       </td>
-                      <td className="px-3 py-2 text-neutral-300">
+                      <td className="px-3 py-2 text-neutral-400 align-top">
+                        {r.category}
+                      </td>
+                      <td className="px-3 py-2 text-neutral-400 align-top whitespace-nowrap">
+                        {r.rating != null
+                          ? `★ ${r.rating.toFixed(1)}`
+                          : ""}
+                        {r.reviewCount != null && (
+                          <span className="text-neutral-500">
+                            {" "}
+                            ({r.reviewCount})
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2 text-neutral-300 align-top whitespace-nowrap">
                         {r.phone ?? ""}
                       </td>
-                      <td className="px-3 py-2 text-neutral-300">
+                      <td className="px-3 py-2 text-neutral-300 align-top">
                         {r.email ?? ""}
                       </td>
-                      <td className="px-3 py-2 text-neutral-300">
+                      <td className="px-3 py-2 text-neutral-300 align-top whitespace-nowrap">
                         {r.whatsapp ?? ""}
                       </td>
-                      <td className="px-3 py-2 text-neutral-300">
+                      <td className="px-3 py-2 text-neutral-300 align-top">
                         {r.instagram ?? ""}
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-2 align-top whitespace-nowrap">
+                        <div className="flex gap-2">
+                          {r.website && (
+                            <a
+                              href={r.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-purple-400 hover:text-purple-300 hover:underline"
+                            >
+                              site
+                            </a>
+                          )}
+                          {r.googleMapsUri && (
+                            <a
+                              href={r.googleMapsUri}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-purple-400 hover:text-purple-300 hover:underline"
+                            >
+                              maps
+                            </a>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2 align-top">
                         <StatusBadge status={r.scrapeStatus} />
                       </td>
                     </tr>
