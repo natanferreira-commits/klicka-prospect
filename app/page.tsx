@@ -21,6 +21,8 @@ const VERTICAL_CHIPS = [
   "Estética",
 ];
 
+type SiteFilter = "all" | "with_site" | "without_site";
+
 export default function Home() {
   const [stage, setStage] = useState<Stage>("search");
   const [whatQuery, setWhatQuery] = useState("");
@@ -30,6 +32,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [siteFilter, setSiteFilter] = useState<SiteFilter>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [enriching, setEnriching] = useState(false);
   const [enrichProgress, setEnrichProgress] = useState<{
@@ -92,6 +95,14 @@ export default function Home() {
     }
   }
 
+  const filteredResults = results.filter((r) => {
+    if (siteFilter === "with_site") return !!r.website;
+    if (siteFilter === "without_site") return !r.website;
+    return true;
+  });
+  const withSiteCount = results.filter((r) => !!r.website).length;
+  const withoutSiteCount = results.length - withSiteCount;
+
   function toggleSelect(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -100,8 +111,8 @@ export default function Home() {
       return next;
     });
   }
-  function selectAll() {
-    setSelected(new Set(results.map((r) => r.placeId)));
+  function selectAllVisible() {
+    setSelected(new Set(filteredResults.map((r) => r.placeId)));
   }
   function selectNone() {
     setSelected(new Set());
@@ -317,16 +328,24 @@ export default function Home() {
 
         {stage === "results" && (
           <div>
-            <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
+            <div className="flex items-center justify-between mb-3 gap-4 flex-wrap">
               <div className="text-sm text-neutral-300">
                 <span className="font-semibold text-neutral-100">
                   {results.length}
                 </span>{" "}
-                resultados.{" "}
+                resultados{" "}
+                <span className="text-neutral-500">
+                  ({withSiteCount} com site, {withoutSiteCount} sem site)
+                </span>
+                . Visível:{" "}
+                <span className="font-semibold text-neutral-100">
+                  {filteredResults.length}
+                </span>
+                . Selecionado:{" "}
                 <span className="font-semibold text-neutral-100">
                   {selected.size}
-                </span>{" "}
-                selecionados.
+                </span>
+                .
               </div>
               <div className="flex gap-2 flex-wrap">
                 <button
@@ -336,10 +355,10 @@ export default function Home() {
                   Nova busca
                 </button>
                 <button
-                  onClick={selectAll}
+                  onClick={selectAllVisible}
                   className="text-sm px-3 py-1.5 border border-neutral-700 text-neutral-200 rounded hover:bg-neutral-800 transition-colors"
                 >
-                  Todos
+                  Todos visíveis
                 </button>
                 <button
                   onClick={selectNone}
@@ -359,6 +378,46 @@ export default function Home() {
               </div>
             </div>
 
+            <div className="mb-4 flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-neutral-500 mr-1">Filtro:</span>
+              {(
+                [
+                  { key: "all", label: "Todos", count: results.length },
+                  {
+                    key: "without_site",
+                    label: "Sem site",
+                    count: withoutSiteCount,
+                  },
+                  {
+                    key: "with_site",
+                    label: "Com site",
+                    count: withSiteCount,
+                  },
+                ] as { key: SiteFilter; label: string; count: number }[]
+              ).map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => setSiteFilter(f.key)}
+                  className={`text-xs px-3 py-1.5 border rounded-full transition-colors ${
+                    siteFilter === f.key
+                      ? "border-purple-500 bg-purple-500/15 text-purple-200"
+                      : "border-neutral-700 text-neutral-400 hover:bg-neutral-800 hover:border-neutral-600"
+                  }`}
+                >
+                  {f.label}{" "}
+                  <span
+                    className={
+                      siteFilter === f.key
+                        ? "text-purple-300/70"
+                        : "text-neutral-500"
+                    }
+                  >
+                    ({f.count})
+                  </span>
+                </button>
+              ))}
+            </div>
+
             <div className="overflow-x-auto rounded border border-neutral-800 bg-neutral-900">
               <table className="min-w-full text-sm">
                 <thead className="bg-neutral-800/50 text-neutral-300">
@@ -373,17 +432,19 @@ export default function Home() {
                   </tr>
                 </thead>
                 <tbody>
-                  {results.length === 0 && (
+                  {filteredResults.length === 0 && (
                     <tr>
                       <td
                         colSpan={7}
                         className="px-3 py-8 text-center text-neutral-500"
                       >
-                        Nenhum resultado.
+                        {results.length === 0
+                          ? "Nenhum resultado."
+                          : "Nenhum resultado com esse filtro."}
                       </td>
                     </tr>
                   )}
-                  {results.map((r) => (
+                  {filteredResults.map((r) => (
                     <tr
                       key={r.placeId}
                       className="border-t border-neutral-800 hover:bg-neutral-800/40 cursor-pointer transition-colors"
