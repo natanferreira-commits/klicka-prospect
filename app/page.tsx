@@ -9,6 +9,7 @@ import type {
   ScrapeStatus,
 } from "@/lib/types";
 import type { LocationSuggestion } from "@/lib/places";
+import { isRealWebsite } from "@/lib/url-classifier";
 
 type Stage = "search" | "results" | "enriched";
 
@@ -96,11 +97,12 @@ export default function Home() {
   }
 
   const filteredResults = results.filter((r) => {
-    if (siteFilter === "with_site") return !!r.website;
-    if (siteFilter === "without_site") return !r.website;
+    const real = isRealWebsite(r.website);
+    if (siteFilter === "with_site") return real;
+    if (siteFilter === "without_site") return !real;
     return true;
   });
-  const withSiteCount = results.filter((r) => !!r.website).length;
+  const withSiteCount = results.filter((r) => isRealWebsite(r.website)).length;
   const withoutSiteCount = results.length - withSiteCount;
 
   function toggleSelect(id: string) {

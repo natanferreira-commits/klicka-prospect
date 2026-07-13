@@ -5,6 +5,7 @@ export type UrlKind =
   | "linktree"
   | "biolink"
   | "beacons"
+  | "google_business_site"
   | "website"
   | "invalid";
 
@@ -28,7 +29,14 @@ export function classifyUrl(url: string): {
   if (host === "linktr.ee") return { kind: "linktree", normalized: u };
   if (host === "bio.link") return { kind: "biolink", normalized: u };
   if (host === "beacons.ai") return { kind: "beacons", normalized: u };
+  if (host === "business.site" || host.endsWith(".business.site"))
+    return { kind: "google_business_site", normalized: u };
   return { kind: "website", normalized: u };
+}
+
+export function isRealWebsite(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return classifyUrl(url).kind === "website";
 }
 
 export function extractPhoneFromWaLink(url: URL): string | null {
