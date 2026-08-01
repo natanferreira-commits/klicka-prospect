@@ -10,14 +10,11 @@ export const maxDuration = 60;
 // estao liberados depois que o ML bloqueou o /sites/MLB/search.
 // MLB1071 = categoria "Animais" (pet), so pra ter um alvo de teste.
 const PROBES: { name: string; path: string }[] = [
-  { name: "users_me", path: "/users/me" },
-  { name: "search_q (bloqueado?)", path: "/sites/MLB/search?q=pet&limit=1" },
-  { name: "search_category", path: "/sites/MLB/search?category=MLB1071&limit=1" },
-  { name: "highlights_category", path: "/highlights/MLB/category/MLB1071" },
-  { name: "trends_category", path: "/trends/MLB/MLB1071" },
-  { name: "top_categories", path: "/sites/MLB/categories" },
-  { name: "category_info", path: "/categories/MLB1071" },
-  { name: "products_search", path: "/products/search?site_id=MLB&q=pet&limit=1" },
+  // como pegar o vendedor a partir de um produto do catalogo
+  { name: "product_get", path: "/products/MLB34384408" },
+  { name: "product_items", path: "/products/MLB34384408/items" },
+  { name: "highlight_product_get", path: "/products/MLB29150924" },
+  { name: "item_get", path: "/items/MLB34384408" },
 ];
 
 export async function GET(req: NextRequest) {
@@ -53,7 +50,7 @@ export async function GET(req: NextRequest) {
         path: probe.path,
         status: r.status,
         ok: r.ok,
-        sample: body.slice(0, 180),
+        sample: body.slice(0, 600),
       });
     } catch (e) {
       results.push({
