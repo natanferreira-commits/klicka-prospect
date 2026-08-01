@@ -10,11 +10,11 @@ export const maxDuration = 60;
 // estao liberados depois que o ML bloqueou o /sites/MLB/search.
 // MLB1071 = categoria "Animais" (pet), so pra ter um alvo de teste.
 const PROBES: { name: string; path: string }[] = [
-  // como pegar o vendedor a partir de um produto do catalogo
-  { name: "product_get", path: "/products/MLB34384408" },
-  { name: "product_items", path: "/products/MLB34384408/items" },
-  { name: "highlight_product_get", path: "/products/MLB29150924" },
-  { name: "item_get", path: "/items/MLB34384408" },
+  // vendedores de um produto ATIVO (mais vendido de pet)
+  { name: "offers_active", path: "/products/MLB29150924/items" },
+  { name: "offers_active_limit", path: "/products/MLB29150924/items?limit=10" },
+  // busca no catalogo com mais resultados, pra ver os campos uteis
+  { name: "products_search_full", path: "/products/search?site_id=MLB&q=racao%20cachorro&limit=3" },
 ];
 
 export async function GET(req: NextRequest) {
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
         path: probe.path,
         status: r.status,
         ok: r.ok,
-        sample: body.slice(0, 600),
+        sample: body.slice(0, 900),
       });
     } catch (e) {
       results.push({
