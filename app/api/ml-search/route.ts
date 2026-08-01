@@ -24,8 +24,6 @@ function storeToResult(s: MLStore): SearchResult {
     rating: null,
     reviewCount: s.matchedItems,
     phone: null,
-    // guardamos o link do perfil da loja como "site" so pra ter o clique;
-    // o contato de verdade vem no enrich por busca web.
     website: s.permalink,
     googleMapsUri: null,
   };
@@ -38,35 +36,52 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "query is required" }, { status: 400 });
     }
 
+    // 1) tem cookie de token?
     const current = readTokens(req);
     if (!current) {
       return NextResponse.json(
-        { error: "Sem conexao com o Mercado Livre", needsAuth: true },
+        { error: "Sem cookie de token no servidor", needsAuth: true },
         { status: 401 },
       );
     }
 
-    const { accessToken, refreshed } = await ensureAccessToken(current);
-    const { stores, totalItems } = await searchSellers(
-      query.trim(),
-      accessToken,
-    );
+    // 2) consegue um access_token valido (renovando se preciso)?
+    let accessToken: string;
+    let refreshed;
+    try {
+      ({ accessToken, refreshed } = await ensureAccessToken(current));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "erro";
+      return NextResponse.json(
+        { error: `Falha ao renovar token: ${msg}`, needsAuth: true },
+        { status: 401 },
+      );
+    }
+
+    // 3) o ML aceita o token na busca?
+    let stores: MLStore[];
+    let totalItems: number;
+    try {
+      ({ stores, totalItems } = await searchSellers(query.trim(), accessToken));
+    } catch (e) {
+      if (e instanceof MLAuthError) {
+        return NextResponse.json(
+          { error: `ML recusou o token: ${e.message}`, needsAuth: true },
+          { status: 401 },
+        );
+      }
+      throw e;
+    }
+
     const results = stores.map(storeToResult);
     const res = NextResponse.json({
       results,
       totalFound: results.length,
       totalItems,
     });
-    // se o token foi renovado, grava o novo par no cookie
     if (refreshed) setTokens(res, refreshed);
     return res;
   } catch (err) {
-    if (err instanceof MLAuthError) {
-      return NextResponse.json(
-        { error: err.message, needsAuth: true },
-        { status: 401 },
-      );
-    }
     const msg = err instanceof Error ? err.message : "unknown error";
     return NextResponse.json({ error: msg }, { status: 500 });
   }

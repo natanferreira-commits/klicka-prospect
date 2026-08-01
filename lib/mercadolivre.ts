@@ -147,7 +147,8 @@ async function apiGet<T>(pathWithQuery: string, accessToken: string): Promise<T>
     },
   });
   if (res.status === 401 || res.status === 403) {
-    throw new MLAuthError(`API ${res.status}: token invalido ou sem permissao`);
+    const txt = await res.text().catch(() => "");
+    throw new MLAuthError(`API ${res.status}: ${txt.slice(0, 200)}`);
   }
   if (!res.ok) {
     const txt = await res.text();
