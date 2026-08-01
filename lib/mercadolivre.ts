@@ -117,14 +117,21 @@ export type MLStore = {
   totalSales: number | null;
 };
 
-type SearchItem = {
-  seller?: { id?: number; nickname?: string };
-  seller_id?: number;
+type ProductSearchResp = {
+  results?: { id?: string }[];
+  paging?: { total?: number };
 };
 
-type SearchResponse = {
-  results?: SearchItem[];
-  paging?: { total?: number };
+type ProductOffer = {
+  seller_id?: number;
+  seller_address?: {
+    city?: { name?: string };
+    state?: { name?: string };
+  };
+};
+
+type ProductOffersResp = {
+  results?: ProductOffer[];
 };
 
 type MLUser = {
@@ -174,47 +181,66 @@ function reputationLabel(rep: MLUser["seller_reputation"]): string {
   return map[level] ?? "Novo vendedor";
 }
 
-// Busca lojas por nicho: pagina a busca, deduplica por seller e enriquece
-// cada loja unica com dados do perfil (/users/{id}).
+// Busca lojas por nicho usando so endpoints liberados (o /sites/search foi
+// bloqueado pelo ML com 403). Fluxo: busca produtos no catalogo -> pega os
+// vendedores de cada produto -> deduplica -> enriquece cada loja com o
+// perfil (/users/{id}).
 export async function searchSellers(
   query: string,
   accessToken: string,
-  opts: { maxPages?: number; maxSellers?: number } = {},
+  opts: { maxProducts?: number; maxSellers?: number } = {},
 ): Promise<{ stores: MLStore[]; totalItems: number }> {
-  const maxPages = opts.maxPages ?? 2;
+  const maxProducts = opts.maxProducts ?? 20;
   const maxSellers = opts.maxSellers ?? 30;
-  const LIMIT = 50;
+  const BATCH = 5;
 
+  // 1) produtos do catalogo que batem com o nicho
+  const q = encodeURIComponent(query);
+  const prod = await apiGet<ProductSearchResp>(
+    `/products/search?site_id=${SITE}&q=${q}&limit=${maxProducts}`,
+    accessToken,
+  );
+  const productIds = (prod.results ?? [])
+    .map((p) => p.id)
+    .filter((id): id is string => !!id);
+  const totalItems = prod.paging?.total ?? productIds.length;
+
+  // 2) vendedores de cada produto (lotes pequenos pra nao estourar rate limit)
   const counts = new Map<number, number>();
-  let totalItems = 0;
-
-  for (let page = 0; page < maxPages; page++) {
-    const offset = page * LIMIT;
-    const q = encodeURIComponent(query);
-    const data = await apiGet<SearchResponse>(
-      `/sites/${SITE}/search?q=${q}&limit=${LIMIT}&offset=${offset}`,
-      accessToken,
+  const addr = new Map<number, { city: string; state: string }>();
+  for (let i = 0; i < productIds.length; i += BATCH) {
+    const batch = productIds.slice(i, i + BATCH);
+    const offersList = await Promise.all(
+      batch.map((id) =>
+        apiGet<ProductOffersResp>(
+          `/products/${id}/items?limit=50`,
+          accessToken,
+        ).catch(() => null),
+      ),
     );
-    const items = data.results ?? [];
-    if (page === 0) totalItems = data.paging?.total ?? items.length;
-    for (const it of items) {
-      const id = it.seller?.id ?? it.seller_id;
-      if (typeof id === "number") {
-        counts.set(id, (counts.get(id) ?? 0) + 1);
+    for (const offers of offersList) {
+      for (const off of offers?.results ?? []) {
+        const sid = off.seller_id;
+        if (typeof sid !== "number") continue;
+        counts.set(sid, (counts.get(sid) ?? 0) + 1);
+        if (!addr.has(sid) && off.seller_address) {
+          addr.set(sid, {
+            city: off.seller_address.city?.name ?? "",
+            state: off.seller_address.state?.name ?? "",
+          });
+        }
       }
     }
-    if (items.length < LIMIT) break;
   }
 
-  // ordena por quantidade de anuncios no nicho (loja mais relevante primeiro)
+  // 3) lojas mais recorrentes no nicho primeiro
   const rankedIds = [...counts.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, maxSellers)
     .map(([id]) => id);
 
+  // 4) perfil de cada loja
   const stores: MLStore[] = [];
-  // busca os perfis em pequenos lotes pra nao estourar rate limit
-  const BATCH = 5;
   for (let i = 0; i < rankedIds.length; i += BATCH) {
     const batch = rankedIds.slice(i, i + BATCH);
     const users = await Promise.all(
@@ -223,18 +249,18 @@ export async function searchSellers(
       ),
     );
     for (let j = 0; j < users.length; j++) {
-      const u = users[j];
       const id = batch[j];
-      if (!u) continue;
+      const u = users[j];
+      const fallback = addr.get(id);
       stores.push({
         sellerId: id,
-        nickname: u.nickname ?? `Loja ${id}`,
-        reputation: reputationLabel(u.seller_reputation),
-        city: u.address?.city ?? "",
-        state: u.address?.state ?? "",
-        permalink: u.permalink ?? null,
+        nickname: u?.nickname ?? `Loja ${id}`,
+        reputation: reputationLabel(u?.seller_reputation),
+        city: u?.address?.city || fallback?.city || "",
+        state: u?.address?.state || fallback?.state || "",
+        permalink: u?.permalink ?? null,
         matchedItems: counts.get(id) ?? 0,
-        totalSales: u.seller_reputation?.transactions?.total ?? null,
+        totalSales: u?.seller_reputation?.transactions?.total ?? null,
       });
     }
   }
