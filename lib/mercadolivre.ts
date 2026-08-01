@@ -25,16 +25,16 @@ function requireEnv(name: string): string {
   return v;
 }
 
-// URL pra onde mandamos o usuario logar/autorizar o app.
-export function getAuthorizeUrl(codeChallenge: string, state: string): string {
+// URL pra onde mandamos o usuario logar/autorizar o app. O `state` vai
+// assinado (HMAC) pela rota, entao a validacao na volta nao depende de
+// cookie sobreviver ao salto entre sites.
+export function getAuthorizeUrl(state: string): string {
   const clientId = requireEnv("ML_CLIENT_ID");
   const redirectUri = requireEnv("ML_REDIRECT_URI");
   const params = new URLSearchParams({
     response_type: "code",
     client_id: clientId,
     redirect_uri: redirectUri,
-    code_challenge: codeChallenge,
-    code_challenge_method: "S256",
     state,
   });
   return `${AUTH_BASE}?${params.toString()}`;
@@ -69,17 +69,14 @@ async function postToken(body: Record<string, string>): Promise<MLTokens> {
 }
 
 // Troca o code (recebido no callback) por access + refresh token.
-export async function exchangeCodeForTokens(
-  code: string,
-  codeVerifier: string,
-): Promise<MLTokens> {
+// App confidencial (tem client_secret), entao nao precisa de PKCE.
+export async function exchangeCodeForTokens(code: string): Promise<MLTokens> {
   return postToken({
     grant_type: "authorization_code",
     client_id: requireEnv("ML_CLIENT_ID"),
     client_secret: requireEnv("ML_CLIENT_SECRET"),
     code,
     redirect_uri: requireEnv("ML_REDIRECT_URI"),
-    code_verifier: codeVerifier,
   });
 }
 
