@@ -47,8 +47,14 @@ export async function GET(req: NextRequest) {
 
   try {
     const tokens = await exchangeCodeForTokens(code);
-    home.searchParams.set("ml", "connected");
-    const res = NextResponse.redirect(home);
+    // Grava o cookie numa resposta 200 (nao num redirect). No Vercel, Set-Cookie
+    // junto de um redirect nao estava persistindo; numa pagina normal persiste.
+    // A propria pagina redireciona pra home via meta refresh.
+    const html = `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=/?ml=connected"></head><body style="background:#0a0a0a;color:#e5e5e5;font-family:system-ui;padding:2rem">Conectando ao Mercado Livre...</body></html>`;
+    const res = new NextResponse(html, {
+      status: 200,
+      headers: { "content-type": "text/html; charset=utf-8" },
+    });
     setTokens(res, tokens);
     return res;
   } catch (err) {
