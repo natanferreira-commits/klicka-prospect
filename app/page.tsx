@@ -130,7 +130,9 @@ export default function Home() {
         data = await res.json();
         if (res.status === 401 && data.needsAuth) {
           setMlConnected(false);
-          throw new Error("Conecte o Mercado Livre primeiro (botão acima).");
+          throw new Error(
+            data.error ?? "Conecte o Mercado Livre primeiro (botão acima).",
+          );
         }
         if (!res.ok) throw new Error(data.error ?? "erro na busca");
       } else {
