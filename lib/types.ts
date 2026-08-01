@@ -17,12 +17,16 @@ export type ScrapeStatus =
   | "parse_failed"
   | "empty";
 
+export type LeadSource = "places" | "mercadolivre";
+
 export type EnrichmentResult = {
   placeId: string;
   email: string | null;
   whatsapp: string | null;
   instagram: string | null;
   scrapeStatus: ScrapeStatus;
+  // preenchido so no fluxo do Mercado Livre: o site descoberto na busca web
+  website?: string | null;
 };
 
 export type EnrichedRow = SearchResult & EnrichmentResult;

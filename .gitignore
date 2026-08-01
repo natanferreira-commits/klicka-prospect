@@ -34,6 +34,9 @@ yarn-error.log*
 .env*
 !.env.example
 
+# token OAuth do Mercado Livre (segredo, nunca commitar)
+.ml-tokens.json
+
 # vercel
 .vercel
 

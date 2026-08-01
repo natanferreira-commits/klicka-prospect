@@ -12,20 +12,34 @@ import type { LocationSuggestion } from "@/lib/places";
 import { isRealWebsite } from "@/lib/url-classifier";
 
 type Stage = "search" | "results" | "enriched";
+type Source = "places" | "mercadolivre";
 
-const VERTICAL_CHIPS = [
-  "Dentistas",
-  "Fisioterapeutas",
-  "Advocacia",
-  "Contabilidade",
-  "Pet Shop",
-  "Estética",
-];
+const VERTICAL_CHIPS: Record<Source, string[]> = {
+  places: [
+    "Dentistas",
+    "Fisioterapeutas",
+    "Advocacia",
+    "Contabilidade",
+    "Pet Shop",
+    "Estética",
+  ],
+  mercadolivre: [
+    "Suplementos",
+    "Moda fitness",
+    "Pet",
+    "Cosméticos",
+    "Papelaria",
+    "Utilidades",
+  ],
+};
 
 type SiteFilter = "all" | "with_site" | "without_site";
 
 export default function Home() {
   const [stage, setStage] = useState<Stage>("search");
+  const [source, setSource] = useState<Source>("places");
+  const [mlConnected, setMlConnected] = useState<boolean | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [whatQuery, setWhatQuery] = useState("");
   const [whereQuery, setWhereQuery] = useState("");
   const [whereSuggestions, setWhereSuggestions] = useState<LocationSuggestion[]>([]);
@@ -64,6 +78,33 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [whereQuery]);
 
+  // Le o retorno do OAuth do ML (?ml=connected|error) so no mount e limpa a URL.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ml = params.get("ml");
+    if (ml === "connected") {
+      setSource("mercadolivre");
+      setMlConnected(true);
+      setNotice("Mercado Livre conectado. Pode buscar.");
+    } else if (ml === "error") {
+      setSource("mercadolivre");
+      setMlConnected(false);
+      setNotice("Falha ao conectar o ML: " + (params.get("ml_msg") ?? ""));
+    }
+    if (ml) window.history.replaceState({}, "", "/");
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Ao escolher a fonte ML, checa uma vez se ja existe token salvo.
+  useEffect(() => {
+    if (source !== "mercadolivre" || mlConnected !== null) return;
+    fetch("/api/ml/status")
+      .then((r) => r.json())
+      .then((d) => setMlConnected(!!d.connected))
+      .catch(() => setMlConnected(false));
+  }, [source, mlConnected]);
+
   function selectSuggestion(s: LocationSuggestion) {
     setWhereQuery(s.fullText);
     setShowSuggestions(false);
@@ -74,18 +115,33 @@ export default function Home() {
     e.preventDefault();
     const what = whatQuery.trim();
     const where = whereQuery.trim();
-    if (!what || !where) return;
+    if (!what) return;
+    if (source === "places" && !where) return;
     setLoading(true);
     setError(null);
     try {
-      const combinedQuery = `${what} em ${where}`;
-      const res = await fetch("/api/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: combinedQuery }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "erro na busca");
+      let data: { results?: SearchResult[]; error?: string; needsAuth?: boolean };
+      if (source === "mercadolivre") {
+        const res = await fetch("/api/ml-search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: what }),
+        });
+        data = await res.json();
+        if (res.status === 401 && data.needsAuth) {
+          setMlConnected(false);
+          throw new Error("Conecte o Mercado Livre primeiro (botão acima).");
+        }
+        if (!res.ok) throw new Error(data.error ?? "erro na busca");
+      } else {
+        const res = await fetch("/api/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: `${what} em ${where}` }),
+        });
+        data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "erro na busca");
+      }
       setResults(data.results ?? []);
       setSelected(new Set());
       setStage("results");
@@ -129,14 +185,17 @@ export default function Home() {
 
     const CHUNK = 10;
     const allEnrichments: EnrichmentResult[] = [];
+    const endpoint =
+      source === "mercadolivre" ? "/api/ml-enrich" : "/api/enrich";
 
     for (let i = 0; i < items.length; i += CHUNK) {
-      const chunk = items.slice(i, i + CHUNK).map((r) => ({
-        placeId: r.placeId,
-        website: r.website,
-      }));
+      const chunk = items.slice(i, i + CHUNK).map((r) =>
+        source === "mercadolivre"
+          ? { placeId: r.placeId, name: r.name }
+          : { placeId: r.placeId, website: r.website },
+      );
       try {
-        const res = await fetch("/api/enrich", {
+        const res = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ items: chunk }),
@@ -164,7 +223,9 @@ export default function Home() {
         instagram: null,
         scrapeStatus: "empty" as ScrapeStatus,
       };
-      return { ...r, ...en };
+      // no fluxo ML, en.website traz o site descoberto; se nao achou,
+      // mantem o link do perfil da loja (r.website).
+      return { ...r, ...en, website: en.website ?? r.website };
     });
 
     setEnriched(rows);
@@ -235,12 +296,74 @@ export default function Home() {
           </div>
         )}
 
+        {notice && (
+          <div className="mb-4 rounded border border-purple-800 bg-purple-950/50 text-purple-200 px-4 py-3 text-sm flex items-center justify-between gap-4">
+            <span>{notice}</span>
+            <button
+              onClick={() => setNotice(null)}
+              className="text-purple-400 hover:text-purple-200 text-xs"
+            >
+              fechar
+            </button>
+          </div>
+        )}
+
         {stage === "search" && (
           <form
             onSubmit={handleSearch}
             className="mx-auto max-w-3xl mt-12"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="mb-5 flex items-center justify-between gap-3 flex-wrap">
+              <div className="inline-flex rounded-lg border border-neutral-700 p-1 bg-neutral-900">
+                {(
+                  [
+                    { key: "places", label: "Google Maps" },
+                    { key: "mercadolivre", label: "Mercado Livre" },
+                  ] as { key: Source; label: string }[]
+                ).map((s) => (
+                  <button
+                    key={s.key}
+                    type="button"
+                    onClick={() => setSource(s.key)}
+                    className={`text-sm px-4 py-1.5 rounded-md font-medium transition-colors ${
+                      source === s.key
+                        ? "bg-purple-500 text-white shadow"
+                        : "text-neutral-400 hover:text-neutral-200"
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+
+              {source === "mercadolivre" && (
+                <div className="text-sm">
+                  {mlConnected === true && (
+                    <span className="inline-flex items-center gap-1.5 text-green-300">
+                      <span className="w-2 h-2 rounded-full bg-green-400" />
+                      Mercado Livre conectado
+                    </span>
+                  )}
+                  {mlConnected === false && (
+                    <a
+                      href="/api/ml/authorize"
+                      className="rounded bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-1.5 font-semibold transition-colors"
+                    >
+                      Conectar Mercado Livre
+                    </a>
+                  )}
+                  {mlConnected === null && (
+                    <span className="text-neutral-500">checando conexão...</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div
+              className={`grid grid-cols-1 gap-3 ${
+                source === "places" ? "md:grid-cols-2" : ""
+              }`}
+            >
               <div>
                 <label className="block text-sm font-medium text-neutral-300 mb-2">
                   O que buscar
@@ -253,6 +376,7 @@ export default function Home() {
                   autoFocus
                 />
               </div>
+              {source === "places" && (
               <div className="relative">
                 <label className="block text-sm font-medium text-neutral-300 mb-2">
                   Onde
@@ -294,10 +418,11 @@ export default function Home() {
                   </ul>
                 )}
               </div>
+              )}
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              {VERTICAL_CHIPS.map((chip) => (
+              {VERTICAL_CHIPS[source].map((chip) => (
                 <button
                   key={chip}
                   type="button"
@@ -316,13 +441,20 @@ export default function Home() {
             <div className="mt-6 flex items-center gap-4">
               <button
                 type="submit"
-                disabled={loading || !whatQuery.trim() || !whereQuery.trim()}
+                disabled={
+                  loading ||
+                  !whatQuery.trim() ||
+                  (source === "places" && !whereQuery.trim()) ||
+                  (source === "mercadolivre" && mlConnected !== true)
+                }
                 className="rounded bg-purple-500 hover:bg-purple-400 disabled:opacity-40 disabled:cursor-not-allowed text-white px-8 py-3 font-semibold transition-colors shadow-lg shadow-purple-500/20"
               >
                 {loading ? "Buscando..." : "Buscar"}
               </button>
               <p className="text-xs text-neutral-500">
-                Até 60 resultados por busca.
+                {source === "mercadolivre"
+                  ? "Busca nacional por lojas do nicho. Até ~30 lojas por busca."
+                  : "Até 60 resultados por busca."}
               </p>
             </div>
           </form>
