@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  getValidAccessToken,
+  ensureAccessToken,
   searchSellers,
   MLAuthError,
   type MLStore,
 } from "@/lib/mercadolivre";
+import { readTokens, setTokens } from "@/lib/ml-tokens";
 import type { SearchResult } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -37,13 +38,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "query is required" }, { status: 400 });
     }
 
-    const accessToken = await getValidAccessToken();
+    const current = readTokens(req);
+    if (!current) {
+      return NextResponse.json(
+        { error: "Sem conexao com o Mercado Livre", needsAuth: true },
+        { status: 401 },
+      );
+    }
+
+    const { accessToken, refreshed } = await ensureAccessToken(current);
     const { stores, totalItems } = await searchSellers(
       query.trim(),
       accessToken,
     );
     const results = stores.map(storeToResult);
-    return NextResponse.json({ results, totalFound: results.length, totalItems });
+    const res = NextResponse.json({
+      results,
+      totalFound: results.length,
+      totalItems,
+    });
+    // se o token foi renovado, grava o novo par no cookie
+    if (refreshed) setTokens(res, refreshed);
+    return res;
   } catch (err) {
     if (err instanceof MLAuthError) {
       return NextResponse.json(

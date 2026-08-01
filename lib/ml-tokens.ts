@@ -1,11 +1,9 @@
-import { promises as fs } from "fs";
-import path from "path";
+import type { NextRequest, NextResponse } from "next/server";
 
-// Token store simples em arquivo local. Serve pro uso do Klicka Prospect
-// rodando na maquina do time. O arquivo fica no .gitignore e guarda o
-// access_token (curta duracao) + refresh_token (rotativo) do Mercado Livre.
-// Em producao serverless (Vercel) trocar por um KV, mas pro fluxo local
-// de prospeccao isso resolve.
+// Token store em cookie seguro do navegador. Funciona em serverless (Vercel)
+// sem precisar de banco/KV externo. Como o Klicka Prospect e uso interno de
+// um usuario so, guardar o token do ML no cookie httpOnly resolve: ele fica
+// preso ao navegador onde voce logou e renova sozinho.
 
 export type MLTokens = {
   accessToken: string;
@@ -14,33 +12,37 @@ export type MLTokens = {
   expiresAt: number;
 };
 
-const TOKEN_FILE = path.join(process.cwd(), ".ml-tokens.json");
+const ACCESS_COOKIE = "ml_access";
+const REFRESH_COOKIE = "ml_refresh";
+const EXPIRES_COOKIE = "ml_expires";
 
-export async function readTokens(): Promise<MLTokens | null> {
-  try {
-    const raw = await fs.readFile(TOKEN_FILE, "utf-8");
-    const parsed = JSON.parse(raw) as Partial<MLTokens>;
-    if (!parsed.accessToken || !parsed.refreshToken || !parsed.expiresAt) {
-      return null;
-    }
-    return {
-      accessToken: parsed.accessToken,
-      refreshToken: parsed.refreshToken,
-      expiresAt: parsed.expiresAt,
-    };
-  } catch {
-    return null;
-  }
+const cookieOpts = () => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+  // refresh token do ML dura ~6 meses
+  maxAge: 60 * 60 * 24 * 180,
+});
+
+export function readTokens(req: NextRequest): MLTokens | null {
+  const refreshToken = req.cookies.get(REFRESH_COOKIE)?.value;
+  if (!refreshToken) return null;
+  const accessToken = req.cookies.get(ACCESS_COOKIE)?.value ?? "";
+  const expiresRaw = req.cookies.get(EXPIRES_COOKIE)?.value;
+  const expiresAt = expiresRaw ? Number.parseInt(expiresRaw, 10) || 0 : 0;
+  return { accessToken, refreshToken, expiresAt };
 }
 
-export async function writeTokens(tokens: MLTokens): Promise<void> {
-  await fs.writeFile(TOKEN_FILE, JSON.stringify(tokens, null, 2), "utf-8");
+export function setTokens(res: NextResponse, tokens: MLTokens): void {
+  const opts = cookieOpts();
+  res.cookies.set(ACCESS_COOKIE, tokens.accessToken, opts);
+  res.cookies.set(REFRESH_COOKIE, tokens.refreshToken, opts);
+  res.cookies.set(EXPIRES_COOKIE, String(tokens.expiresAt), opts);
 }
 
-export async function clearTokens(): Promise<void> {
-  try {
-    await fs.unlink(TOKEN_FILE);
-  } catch {
-    // se nao existe, tudo bem
-  }
+export function clearTokens(res: NextResponse): void {
+  res.cookies.delete(ACCESS_COOKIE);
+  res.cookies.delete(REFRESH_COOKIE);
+  res.cookies.delete(EXPIRES_COOKIE);
 }

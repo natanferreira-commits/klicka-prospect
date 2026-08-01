@@ -1,4 +1,4 @@
-import { readTokens, writeTokens, type MLTokens } from "./ml-tokens";
+import type { MLTokens } from "./ml-tokens";
 
 // Integracao com a API do Mercado Livre.
 // A API de busca (sites/MLB/search) hoje exige token Bearer, e o ML so
@@ -73,7 +73,7 @@ export async function exchangeCodeForTokens(
   code: string,
   codeVerifier: string,
 ): Promise<MLTokens> {
-  const tokens = await postToken({
+  return postToken({
     grant_type: "authorization_code",
     client_id: requireEnv("ML_CLIENT_ID"),
     client_secret: requireEnv("ML_CLIENT_SECRET"),
@@ -81,40 +81,29 @@ export async function exchangeCodeForTokens(
     redirect_uri: requireEnv("ML_REDIRECT_URI"),
     code_verifier: codeVerifier,
   });
-  await writeTokens(tokens);
-  return tokens;
 }
 
 // Renova usando o refresh_token. O ML rotaciona o refresh a cada uso,
-// por isso a gente reescreve o arquivo com o novo par.
+// entao quem chamar precisa persistir o novo par.
 async function refresh(refreshToken: string): Promise<MLTokens> {
-  const tokens = await postToken({
+  return postToken({
     grant_type: "refresh_token",
     client_id: requireEnv("ML_CLIENT_ID"),
     client_secret: requireEnv("ML_CLIENT_SECRET"),
     refresh_token: refreshToken,
   });
-  await writeTokens(tokens);
-  return tokens;
 }
 
-// Devolve um access_token valido, renovando se necessario.
-export async function getValidAccessToken(): Promise<string> {
-  const current = await readTokens();
-  if (!current) {
-    throw new MLAuthError(
-      "Sem token do Mercado Livre. Faca o login em /api/ml/authorize primeiro.",
-    );
-  }
-  if (Date.now() < current.expiresAt) {
-    return current.accessToken;
+// Garante um access_token valido a partir dos tokens atuais. Se precisou
+// renovar, devolve o novo par em `refreshed` pra rota gravar no cookie.
+export async function ensureAccessToken(
+  current: MLTokens,
+): Promise<{ accessToken: string; refreshed: MLTokens | null }> {
+  if (current.accessToken && Date.now() < current.expiresAt) {
+    return { accessToken: current.accessToken, refreshed: null };
   }
   const renewed = await refresh(current.refreshToken);
-  return renewed.accessToken;
-}
-
-export async function isConnected(): Promise<boolean> {
-  return (await readTokens()) !== null;
+  return { accessToken: renewed.accessToken, refreshed: renewed };
 }
 
 // ---------- Busca de lojas ----------

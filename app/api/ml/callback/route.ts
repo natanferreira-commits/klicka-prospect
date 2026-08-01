@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exchangeCodeForTokens } from "@/lib/mercadolivre";
+import { setTokens } from "@/lib/ml-tokens";
 
 export const runtime = "nodejs";
 
@@ -35,9 +36,10 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    await exchangeCodeForTokens(code, verifier);
+    const tokens = await exchangeCodeForTokens(code, verifier);
     home.searchParams.set("ml", "connected");
     const res = NextResponse.redirect(home);
+    setTokens(res, tokens);
     // limpa os cookies temporarios do fluxo
     res.cookies.delete("ml_pkce_verifier");
     res.cookies.delete("ml_oauth_state");

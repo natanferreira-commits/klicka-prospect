@@ -12,34 +12,64 @@ depois acha os contatos delas por busca web.
    site proprio / Instagram / WhatsApp. Se acha site, raspa email e telefone dele
    reaproveitando o mesmo scraper do fluxo do Google.
 
-## O que voce precisa fazer uma vez
+## Onde o token fica guardado
+
+O token do ML fica num **cookie httpOnly seguro do navegador** onde voce logou.
+Isso funciona em serverless (Vercel) sem banco/KV externo. Consequencias:
+- O acesso ao ML fica preso ao navegador onde voce clicou "Conectar".
+- Se limpar os cookies do site, e so clicar em "Conectar" de novo.
+- Como e uma ferramenta interna de um usuario so, isso resolve.
+
+## Setup no Vercel (fluxo recomendado)
 
 ### 1. Criar o app no Mercado Livre
 
 - Entre em https://developers.mercadolivre.com.br -> **Suas aplicacoes** -> criar.
 - Copie o **App ID** (client id) e o **Secret Key** (client secret).
-- Em **Redirect URI** cadastre EXATAMENTE a mesma URL do `.env.local`
-  (`ML_REDIRECT_URI`). Precisa bater caractere por caractere, inclusive a porta.
 
-### 2. Preencher o `.env.local`
+### 2. Descobrir a URL de producao do Vercel
+
+No painel do projeto no Vercel, pegue o dominio de producao
+(ex: `https://klicka-prospect.vercel.app`). A Redirect URI vai ser esse dominio
+mais `/api/ml/callback`.
+
+### 3. Cadastrar a Redirect URI no app do ML
+
+No painel do app, no campo de URIs de redirecionamento, cole EXATAMENTE:
+
+```
+https://SEU-PROJETO.vercel.app/api/ml/callback
+```
+
+O ML aceita `https` de boa (e ate exige em producao).
+
+### 4. Setar as variaveis no Vercel
+
+No projeto do Vercel -> **Settings -> Environment Variables**, adicione (Production
+e Preview):
 
 ```
 ML_CLIENT_ID=seu-app-id
 ML_CLIENT_SECRET=seu-client-secret
-ML_REDIRECT_URI=http://localhost:3000/api/ml/callback
+ML_REDIRECT_URI=https://SEU-PROJETO.vercel.app/api/ml/callback
+ML_WEBSEARCH=duckduckgo
 ```
 
-> **Atencao na porta:** o `redirect_uri` tem que apontar pra porta onde o app esta
-> rodando. Se o `npm run dev` subir em outra porta (ex: 3006 porque a 3000 esta ocupada),
-> ajuste a porta aqui E no cadastro do app no ML. O ideal e rodar esse projeto sozinho
-> pra ele pegar sempre a 3000.
+O `GOOGLE_MAPS_API_KEY` ja deve estar la (a busca do Google depende dele).
+Depois de adicionar, faca um redeploy pra pegar as variaveis novas.
 
-### 3. Conectar
+### 5. Conectar
 
-- Abra o app, escolha a fonte **Mercado Livre** e clique em **Conectar Mercado Livre**.
-- Faca o login no ML e autorize. Voce volta pro app ja conectado.
-- O token fica salvo em `.ml-tokens.json` (no `.gitignore`, nunca vai pro GitHub) e
-  se renova sozinho depois disso.
+- Abra a URL de producao, escolha a fonte **Mercado Livre** e clique em
+  **Conectar Mercado Livre**.
+- Faca o login no ML e autorize. Voce volta pro app ja conectado, e o token
+  passa a renovar sozinho.
+
+## Rodar local (opcional)
+
+Se um dia quiser rodar na maquina, use `ML_REDIRECT_URI=http://localhost:3000/api/ml/callback`
+no `.env.local`, cadastre essa mesma URL no app do ML, e rode o projeto sozinho pra
+ele pegar a porta 3000.
 
 ## Busca de contatos: trocar o motor
 
