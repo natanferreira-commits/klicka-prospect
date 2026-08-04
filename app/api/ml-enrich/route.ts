@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { findContactForStore } from "@/lib/contact-finder";
+import { getCurrentUser } from "@/lib/user";
+import { checkEnrichLimit, recordEnrich } from "@/lib/usage";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -13,6 +15,11 @@ type MLEnrichItem = { placeId: string; name: string };
 // gratuito e nao tomar bloqueio por rajada.
 export async function POST(req: NextRequest) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "faça login" }, { status: 401 });
+    }
+
     const { items } = (await req.json()) as { items?: MLEnrichItem[] };
     if (!items || !Array.isArray(items)) {
       return NextResponse.json(
@@ -27,10 +34,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const limit = await checkEnrichLimit(user);
+    if (!limit.ok) {
+      return NextResponse.json(
+        { error: limit.reason, limitReached: true, upgrade: limit.upgrade },
+        { status: 402 },
+      );
+    }
+
     const results = [];
     for (const it of items) {
       results.push(await findContactForStore(it.placeId, it.name));
     }
+    await recordEnrich(user, "mercadolivre", results.length);
     return NextResponse.json({ results });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown error";

@@ -7,6 +7,9 @@ import {
 } from "@/lib/mercadolivre";
 import { readTokens, setTokens } from "@/lib/ml-tokens";
 import type { SearchResult } from "@/lib/types";
+import { getCurrentUser } from "@/lib/user";
+import { sourceAllowed } from "@/lib/plans";
+import { checkSearchLimit, recordSearch } from "@/lib/usage";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -31,9 +34,36 @@ function storeToResult(s: MLStore): SearchResult {
 
 export async function POST(req: NextRequest) {
   try {
+    // 0) precisa estar logado
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: "faça login" }, { status: 401 });
+    }
+
     const { query } = (await req.json()) as { query?: string };
     if (!query || typeof query !== "string" || query.trim().length === 0) {
       return NextResponse.json({ error: "query is required" }, { status: 400 });
+    }
+
+    // 0.1) fonte liberada no plano? (Free nao usa Mercado Livre)
+    if (!sourceAllowed(user.plan, "mercadolivre")) {
+      return NextResponse.json(
+        {
+          error: "O Mercado Livre está disponível a partir do plano Pro.",
+          limitReached: true,
+          upgrade: "pro",
+        },
+        { status: 402 },
+      );
+    }
+
+    // 0.2) trava por busca
+    const limit = await checkSearchLimit(user);
+    if (!limit.ok) {
+      return NextResponse.json(
+        { error: limit.reason, limitReached: true, upgrade: limit.upgrade },
+        { status: 402 },
+      );
     }
 
     // 1) tem cookie de token?
@@ -73,7 +103,13 @@ export async function POST(req: NextRequest) {
       throw e;
     }
 
-    const results = stores.map(storeToResult);
+    const results = stores
+      .map(storeToResult)
+      .slice(0, user.plan.limits.resultsPerSearch);
+
+    // registra: conta na trava + grava no log
+    await recordSearch(user, "mercadolivre", { query: query.trim() });
+
     const res = NextResponse.json({
       results,
       totalFound: results.length,
