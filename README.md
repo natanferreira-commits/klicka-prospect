@@ -1,4 +1,4 @@
-# Klicka Prospect
+# Klicka Leads
 
 Lead extractor via Google Maps Places API + scraping HTML.
 

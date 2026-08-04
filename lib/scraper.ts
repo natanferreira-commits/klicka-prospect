@@ -7,7 +7,7 @@ import {
 import type { EnrichmentResult } from "./types";
 
 const USER_AGENT =
-  "Mozilla/5.0 (compatible; KlickaProspectBot/0.1; contact@klicka.local)";
+  "Mozilla/5.0 (compatible; KlickaLeadsBot/0.1; contact@klicka.local)";
 const FETCH_TIMEOUT_MS = 5000;
 
 const EMAIL_DOMAIN_BLOCKLIST = new Set([

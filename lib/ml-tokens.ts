@@ -1,7 +1,7 @@
 import type { NextRequest, NextResponse } from "next/server";
 
 // Token store em cookie seguro do navegador. Funciona em serverless (Vercel)
-// sem precisar de banco/KV externo. Como o Klicka Prospect e uso interno de
+// sem precisar de banco/KV externo. Como o Klicka Leads e uso interno de
 // um usuario so, guardar o token do ML no cookie httpOnly resolve: ele fica
 // preso ao navegador onde voce logou e renova sozinho.
 

@@ -15,7 +15,7 @@ export default async function LandingPage() {
       <nav className="border-b border-neutral-900">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
           <span className="text-lg font-bold tracking-tight">
-            Klicka<span className="text-purple-400">Prospect</span>
+            Klicka<span className="text-purple-400">Leads</span>
           </span>
           <div className="flex items-center gap-3 text-sm">
             {user ? (
@@ -166,7 +166,7 @@ export default async function LandingPage() {
       <footer className="border-t border-neutral-900 mt-8">
         <div className="mx-auto max-w-6xl px-6 py-8 flex items-center justify-between text-sm text-neutral-500">
           <span>
-            Klicka<span className="text-purple-400">Prospect</span>
+            Klicka<span className="text-purple-400">Leads</span>
           </span>
           <span>© {new Date().getFullYear()} Grupo Dupla</span>
         </div>

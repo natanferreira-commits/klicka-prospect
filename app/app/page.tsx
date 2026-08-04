@@ -374,7 +374,7 @@ export default function Home() {
       <header className="border-b border-neutral-800 bg-neutral-950/95 backdrop-blur sticky top-0 z-10">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
           <h1 className="text-lg font-semibold tracking-tight text-neutral-50">
-            Klicka Prospect
+            Klicka<span className="text-purple-400">Leads</span>
           </h1>
           <div className="flex items-center gap-4">
             {plan && usage && (

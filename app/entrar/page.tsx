@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import AuthForm from "@/components/AuthForm";
 
-export const metadata = { title: "Entrar · Klicka Prospect" };
+export const metadata = { title: "Entrar · Klicka Leads" };
 
 export default function EntrarPage() {
   return (
@@ -12,7 +12,7 @@ export default function EntrarPage() {
           href="/"
           className="block text-center text-xl font-bold tracking-tight text-neutral-50 mb-8"
         >
-          Klicka<span className="text-purple-400">Prospect</span>
+          Klicka<span className="text-purple-400">Leads</span>
         </Link>
         <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6">
           <h1 className="text-lg font-semibold text-neutral-100 mb-1">

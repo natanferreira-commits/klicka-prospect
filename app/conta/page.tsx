@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/user";
 import { getUsage } from "@/lib/usage";
 import { priceLabel } from "@/lib/plans";
 
-export const metadata = { title: "Minha conta · Klicka Prospect" };
+export const metadata = { title: "Minha conta · Klicka Leads" };
 
 export default async function ContaPage() {
   const user = await getCurrentUser();

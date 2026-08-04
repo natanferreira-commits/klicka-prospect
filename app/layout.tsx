@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Klicka Prospect",
+  title: "Klicka Leads",
   description: "Lead extractor via Google Maps + scraping",
 };
 
