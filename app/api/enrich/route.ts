@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { enrichOne } from "@/lib/scraper";
 import { getCurrentUser } from "@/lib/user";
-import { checkEnrichLimit, recordEnrich } from "@/lib/usage";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -31,19 +30,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // teto de contatos (so morde no Free)
-    const limit = await checkEnrichLimit(user);
-    if (!limit.ok) {
-      return NextResponse.json(
-        { error: limit.reason, limitReached: true, upgrade: limit.upgrade },
-        { status: 402 },
-      );
-    }
-
     const results = await Promise.all(
       items.map((it) => enrichOne(it.placeId, it.website)),
     );
-    await recordEnrich(user, "places", results.length);
     return NextResponse.json({ results });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown error";

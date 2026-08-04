@@ -8,7 +8,7 @@
 <body>
 <x-dc>
 <helmet>
-<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="nocturne.css?v=2">
 <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <style>
 html { scroll-behavior: smooth; }
@@ -261,6 +261,8 @@ a:hover { color: var(--color-accent-300); }
           <textarea class="input" id="ds-e" placeholder="Anote o contexto da lista"></textarea>
         </div>
         <div style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:22px;align-items:center">
+          <label class="check"><input type="checkbox" checked><span class="box"><i class="ph ph-check"></i></span>Selecionar tudo</label>
+          <label class="check"><input type="checkbox"><span class="box"><i class="ph ph-check"></i></span>Só quem não tem site</label>
           <label class="radio"><input type="radio" name="ds-r" checked><span class="dot"></span>Todos os negócios</label>
           <label class="radio"><input type="radio" name="ds-r"><span class="dot"></span>Só quem não tem site</label>
           <span class="seg">

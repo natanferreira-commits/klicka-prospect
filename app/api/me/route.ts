@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/user";
-import { getUsage } from "@/lib/usage";
+import { getUsage, creditsRemaining } from "@/lib/usage";
 
 export const runtime = "nodejs";
 
@@ -16,6 +16,11 @@ export async function GET() {
       id: user.plan.id,
       name: user.plan.name,
       limits: user.plan.limits,
+    },
+    credits: {
+      used: usage.creditsUsed,
+      limit: user.plan.limits.creditsPerMonth,
+      remaining: creditsRemaining(user, usage),
     },
     usage,
   });

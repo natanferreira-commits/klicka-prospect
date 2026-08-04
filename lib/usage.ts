@@ -1,9 +1,9 @@
 import { db } from "@/lib/db";
-import { usageCounters, usageEvents } from "@/lib/db/schema";
-import { and, eq, sql } from "drizzle-orm";
+import { usageCounters, usageEvents, deliveredContacts } from "@/lib/db/schema";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import type { AppUser } from "@/lib/user";
 import type { LeadSource } from "@/lib/types";
-import type { PlanId } from "@/lib/plans";
+import { nextPlan, type PlanId } from "@/lib/plans";
 
 // Periodo do contador: 'YYYY-MM' em UTC. Virar o mes = nova linha = reset.
 export function currentPeriod(): string {
@@ -13,6 +13,7 @@ export function currentPeriod(): string {
 
 export type UsageSnapshot = {
   period: string;
+  creditsUsed: number;
   searches: number;
   leads: number;
   exports: number;
@@ -23,88 +24,113 @@ export async function getUsage(userId: string): Promise<UsageSnapshot> {
   const rows = await db
     .select()
     .from(usageCounters)
-    .where(
-      and(eq(usageCounters.userId, userId), eq(usageCounters.period, period)),
-    )
+    .where(and(eq(usageCounters.userId, userId), eq(usageCounters.period, period)))
     .limit(1);
   const r = rows[0];
   return {
     period,
+    creditsUsed: r?.creditsUsed ?? 0,
     searches: r?.searchesCount ?? 0,
     leads: r?.leadsExtracted ?? 0,
     exports: r?.exportsCount ?? 0,
   };
 }
 
-export type LimitDenied = {
-  ok: false;
-  reason: string;
-  limit: number;
-  used: number;
-  upgrade: PlanId | null;
-};
-export type LimitCheck = { ok: true } | LimitDenied;
-
-function nextPlan(id: PlanId): PlanId | null {
-  if (id === "free") return "pro";
-  if (id === "pro") return "business";
-  return null;
-}
-
-// TRAVA principal: da pra fazer mais uma busca neste mes?
-export async function checkSearchLimit(user: AppUser): Promise<LimitCheck> {
-  const limit = user.plan.limits.searchesPerMonth;
-  const usage = await getUsage(user.id);
-  if (usage.searches >= limit) {
-    return {
-      ok: false,
-      reason: `Você usou as ${limit} buscas do mês do plano ${user.plan.name}.`,
-      limit,
-      used: usage.searches,
-      upgrade: nextPlan(user.plan.id),
-    };
-  }
-  return { ok: true };
-}
-
-// Trava de enriquecimento (so morde no Free, que tem teto). Pago = ilimitado.
-export async function checkEnrichLimit(user: AppUser): Promise<LimitCheck> {
-  const cap = user.plan.limits.enrichPerMonth;
-  if (cap == null) return { ok: true };
-  const usage = await getUsage(user.id);
-  if (usage.leads >= cap) {
-    return {
-      ok: false,
-      reason: `Você atingiu o limite de ${cap} contatos extraídos do plano ${user.plan.name}.`,
-      limit: cap,
-      used: usage.leads,
-      upgrade: nextPlan(user.plan.id),
-    };
-  }
-  return { ok: true };
+export function creditsRemaining(user: AppUser, usage: UsageSnapshot): number {
+  return Math.max(0, user.plan.limits.creditsPerMonth - usage.creditsUsed);
 }
 
 async function bump(
   userId: string,
-  field: "searchesCount" | "leadsExtracted" | "exportsCount",
+  field: "creditsUsed" | "searchesCount" | "leadsExtracted" | "exportsCount",
   by: number,
 ) {
   const period = currentPeriod();
-  const insertValues: Record<string, unknown> = {
-    userId,
-    period,
-    [field]: by,
-  };
+  const values = { userId, period, [field]: by } as typeof usageCounters.$inferInsert;
   await db
     .insert(usageCounters)
-    .values(insertValues as typeof usageCounters.$inferInsert)
+    .values(values)
     .onConflictDoUpdate({
       target: [usageCounters.userId, usageCounters.period],
       set: { [field]: sql`${usageCounters[field]} + ${by}` },
     });
 }
 
-// Registra a acao no contador (trava) E no log append-only (auditoria/custo).
+export type ChargeResult = {
+  deliveredKeys: string[]; // contatos que o usuario pode ver (pagos agora + ja pagos antes)
+  charged: number; // creditos gastos agora (contatos novos)
+  reused: number; // contatos que ja eram dele (nao cobrados)
+  blocked: number; // contatos novos que ficaram de fora por falta de credito
+};
+
+// Cobra os contatos NOVOS (nao entregues antes), respeitando o credito restante.
+// Contato repetido nao cobra. Se faltar credito, entrega ate onde da.
+export async function chargeForContacts(
+  user: AppUser,
+  contactKeys: string[],
+  usage: UsageSnapshot,
+): Promise<ChargeResult> {
+  if (contactKeys.length === 0) {
+    return { deliveredKeys: [], charged: 0, reused: 0, blocked: 0 };
+  }
+
+  // quais desses o usuario ja tem?
+  const existing = await db
+    .select({ k: deliveredContacts.contactKey })
+    .from(deliveredContacts)
+    .where(
+      and(
+        eq(deliveredContacts.userId, user.id),
+        inArray(deliveredContacts.contactKey, contactKeys),
+      ),
+    );
+  const alreadySet = new Set(existing.map((e) => e.k));
+  const already = contactKeys.filter((k) => alreadySet.has(k));
+  const fresh = contactKeys.filter((k) => !alreadySet.has(k));
+
+  const remaining = creditsRemaining(user, usage);
+  const affordable = fresh.slice(0, remaining);
+  const blocked = fresh.length - affordable.length;
+
+  if (affordable.length > 0) {
+    const period = currentPeriod();
+    await db
+      .insert(deliveredContacts)
+      .values(affordable.map((k) => ({ userId: user.id, contactKey: k, firstSeenPeriod: period })))
+      .onConflictDoNothing();
+    await bump(user.id, "creditsUsed", affordable.length);
+  }
+
+  return {
+    deliveredKeys: [...already, ...affordable],
+    charged: affordable.length,
+    reused: already.length,
+    blocked,
+  };
+}
+
+// Estimativa heuristica de quantos negocios devem vir ANTES da busca.
+// Adaptacao: o pre-count real do Google custa, entao aproximamos por
+// porte da cidade x densidade do nicho x alcance. O numero real aparece
+// depois da busca (o resultado corrige a estimativa).
+const REACH_FACTOR: Record<string, number> = { cidade: 1, metro: 1.9, estado: 3.6 };
+const BIG_CITIES = ["sao paulo", "rio de janeiro", "belo horizonte", "brasilia", "salvador", "fortaleza", "curitiba", "recife", "porto alegre", "manaus", "goiania", "campinas"];
+
+function cityTier(region: string): number {
+  const c = region.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").split(",")[0].trim();
+  return BIG_CITIES.some((b) => c.includes(b)) ? 1.6 : 1;
+}
+
+export function estimateBusinesses(niche: string, region: string, reach = "cidade"): number {
+  let h = 2166136261;
+  const s = `${niche}|${region}`;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  const base = 14 + ((h >>> 0) % 13); // 14..26
+  const n = base * (REACH_FACTOR[reach] ?? 1) * cityTier(region);
+  return Math.round(n);
+}
+
+// Log (nao trava) — auditoria/custo. A trava e o credito.
 export async function recordSearch(
   user: AppUser,
   source: LeadSource,
@@ -120,26 +146,7 @@ export async function recordSearch(
   });
 }
 
-export async function recordEnrich(
-  user: AppUser,
-  source: LeadSource,
-  count: number,
-): Promise<void> {
-  if (count <= 0) return;
-  await bump(user.id, "leadsExtracted", count);
-  await db.insert(usageEvents).values({
-    userId: user.id,
-    type: "enrich",
-    source,
-    quantity: count,
-    meta: { plan: user.plan.id },
-  });
-}
-
-export async function recordExport(
-  user: AppUser,
-  count: number,
-): Promise<void> {
+export async function recordExport(user: AppUser, count: number): Promise<void> {
   await bump(user.id, "exportsCount", 1);
   await db.insert(usageEvents).values({
     userId: user.id,
@@ -147,4 +154,14 @@ export async function recordExport(
     quantity: count,
     meta: { plan: user.plan.id },
   });
+}
+
+export type LimitDenied = {
+  ok: false;
+  reason: string;
+  upgrade: PlanId | null;
+};
+
+export function upgradeFor(user: AppUser): PlanId | null {
+  return nextPlan(user.plan.id);
 }

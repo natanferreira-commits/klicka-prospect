@@ -167,10 +167,10 @@ export default async function LandingPage() {
                   {plan.priceMonthlyCents > 0 && <span className="text-muted" style={{ fontSize: 13 }}> /mês</span>}
                 </div>
                 <ul style={{ listStyle: "none", padding: 0, margin: "8px 0 16px", display: "flex", flexDirection: "column", gap: 7, fontSize: 13, color: "var(--color-neutral-300)", flex: 1 }}>
-                  <li>{plan.limits.searchesPerMonth} buscas por mês</li>
-                  <li>Até {plan.limits.resultsPerSearch} resultados por busca</li>
+                  <li>{plan.limits.creditsPerMonth.toLocaleString("pt-BR")} contatos por mês</li>
                   <li>{plan.limits.sources.length > 1 ? "Google Maps + Mercado Livre" : "Google Maps"}</li>
                   <li style={plan.limits.exportCsv ? undefined : { color: "var(--color-neutral-600)" }}>{plan.limits.exportCsv ? "Export CSV e Excel" : "Sem exportação"}</li>
+                  <li style={plan.limits.historyDays ? undefined : { color: "var(--color-neutral-600)" }}>{plan.limits.historyDays ? "Histórico de buscas" : "Sem histórico"}</li>
                 </ul>
                 <Link className={`btn ${featured ? "btn-primary" : "btn-secondary"}`} href="/cadastro" style={{ width: "100%" }}>
                   {plan.priceMonthlyCents === 0 ? "Começar grátis" : "Assinar"}

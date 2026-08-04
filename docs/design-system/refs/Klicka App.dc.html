@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="nocturne.css?v=2">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<style>
+body { margin: 0; }
+a:hover { color: var(--color-accent-300); }
+@keyframes klRise { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+@keyframes klSpin { to { transform: rotate(360deg) } }
+@keyframes klPulse { 0%,100% { opacity: .3 } 50% { opacity: .7 } }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--color-bg);display:grid;grid-template-columns:232px minmax(0,1fr)">
+
+  <aside style="position:sticky;top:0;height:100vh;padding:24px 20px;border-right:1px solid var(--color-divider);display:flex;flex-direction:column;gap:26px">
+    <img src="klicka-logo.png" alt="klicka." style="height:20px;width:auto;align-self:flex-start;flex:none">
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <sc-for list="{{ nav }}" as="n" hint-placeholder-count="4">
+        <sc-if value="{{ n.ativo }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ n.ir }}" style="display:flex;align-items:center;gap:9px;padding:7px 9px;border:0;border-radius:var(--radius-sm);background:transparent;box-shadow:inset 0 0 0 1px var(--color-accent);color:var(--color-accent);font:inherit;font-size:13px;cursor:pointer;text-align:left">
+            <i class="{{ n.icone }}" style="font-size:15px"></i>{{ n.nome }}
+          </button>
+        </sc-if>
+        <sc-if value="{{ n.inativo }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ n.ir }}" style="display:flex;align-items:center;gap:9px;padding:7px 9px;border:0;border-radius:var(--radius-sm);background:transparent;color:var(--color-neutral-300);font:inherit;font-size:13px;cursor:pointer;text-align:left">
+            <i class="{{ n.icone }}" style="font-size:15px"></i>{{ n.nome }}
+          </button>
+        </sc-if>
+      </sc-for>
+    </div>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+          <span class="text-muted" style="font-size:11px">{{ creditos }} créditos</span>
+          <span class="text-muted" style="font-size:10px">de 2.000</span>
+        </div>
+        <div style="height:3px;border-radius:2px;background:var(--color-neutral-800)"><div style="height:3px;width:71%;border-radius:2px;background:var(--color-accent)"></div></div>
+      </div>
+      <a href="#ajuda" style="font-size:12px;color:var(--color-neutral-500);text-decoration:none">Ajuda</a>
+    </div>
+  </aside>
+
+  <main style="min-width:0">
+
+    <sc-if value="{{ ehBuscar }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 32px;border-bottom:1px solid var(--color-divider)">
+          <span style="font-family:var(--font-heading);font-size:16px">Nova busca</span>
+        </div>
+        <div style="padding:56px 32px 120px;max-width:880px">
+          <h1 style="font-size:40px;letter-spacing:-.03em;margin:0 0 10px">O que você quer prospectar?</h1>
+          <p class="text-muted" style="font-size:15px;max-width:48ch;margin:0 0 44px">Nicho e cidade bastam. Você vê o custo em créditos antes de rodar — nada é cobrado sem confirmação.</p>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;max-width:620px">
+            <div class="field">
+              <label for="ap-n">Nicho</label>
+              <select class="input" id="ap-n" value="{{ nicho }}" onChange="{{ mudarNicho }}" style="min-height:44px;font-size:15px">
+                <option>Odontologia</option>
+                <option>Academias</option>
+                <option>Restaurantes</option>
+                <option>Pet shops</option>
+                <option>Advocacia</option>
+                <option>Estética e beleza</option>
+                <option>Oficinas mecânicas</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ap-r">Região</label>
+              <input class="input" id="ap-r" value="{{ regiao }}" onChange="{{ mudarRegiao }}" placeholder="Cidade, estado" style="min-height:44px;font-size:15px">
+            </div>
+          </div>
+
+          <div class="field" style="margin-top:22px">
+            <label>Alcance</label>
+            <span class="seg" style="margin-top:2px">
+              <label class="seg-opt"><input type="radio" name="ap-al" checked="{{ alcCidade }}" onChange="{{ setCidade }}">Só a cidade</label>
+              <label class="seg-opt"><input type="radio" name="ap-al" checked="{{ alcMetro }}" onChange="{{ setMetro }}">Região metropolitana</label>
+              <label class="seg-opt"><input type="radio" name="ap-al" checked="{{ alcEstado }}" onChange="{{ setEstado }}">Estado inteiro</label>
+            </span>
+          </div>
+
+          <div style="margin-top:36px;padding:22px;border-radius:var(--radius-lg);background:var(--color-surface);box-shadow:var(--shadow-sm);max-width:620px">
+            <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 26px">
+              <div>
+                <div class="text-muted" style="font-size:12px">Estimativa</div>
+                <div style="font-family:var(--font-heading);font-size:26px;letter-spacing:-.02em;margin-top:3px">{{ estimativa }} negócios</div>
+              </div>
+              <div>
+                <div class="text-muted" style="font-size:12px">Custo</div>
+                <div style="font-family:var(--font-heading);font-size:26px;letter-spacing:-.02em;margin-top:3px">{{ estimativa }} créditos</div>
+              </div>
+              <div style="margin-left:auto">
+                <div class="text-muted" style="font-size:12px">Depois da busca</div>
+                <div style="font-family:var(--font-heading);font-size:26px;letter-spacing:-.02em;margin-top:3px;color:var(--color-accent)">{{ saldoDepois }}</div>
+              </div>
+            </div>
+            <p class="text-muted" style="font-size:12px;margin:16px 0 0">Contato que já saiu em busca anterior não é cobrado de novo.</p>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:28px">
+            <button class="btn btn-primary" onClick="{{ abrirConfirmar }}" style="min-height:44px;padding-inline:22px;font-size:15px">
+              <i class="ph ph-magnifying-glass" style="font-size:17px"></i> Buscar contatos
+            </button>
+            <span class="text-muted" style="font-size:13px">ou <a href="#historico" onClick="{{ irHistorico }}">reabra uma busca antiga</a> sem gastar crédito</span>
+          </div>
+
+          <div style="margin-top:72px">
+            <span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent)">Sugestões para quem vende gestão de tráfego</span>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px">
+              <sc-for list="{{ sugestoes }}" as="s" hint-placeholder-count="4">
+                <button class="btn btn-secondary" onClick="{{ s.usar }}" style="font-size:14px;padding:9px 16px">{{ s.rotulo }}</button>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ ehResultado }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="display:flex;align-items:center;gap:14px;padding:14px 32px;border-bottom:1px solid var(--color-divider)">
+          <button onClick="{{ irBuscar }}" class="btn btn-icon btn-secondary"><i class="ph ph-arrow-left" style="font-size:15px"></i></button>
+          <span style="font-family:var(--font-heading);font-size:16px">{{ titulo }}</span>
+          <span class="text-muted" style="font-size:13px">{{ resumo }}</span>
+          <button class="btn btn-primary" onClick="{{ abrirExportar }}" style="margin-left:auto"><i class="ph ph-download-simple" style="font-size:15px"></i> Exportar</button>
+        </div>
+
+        <div style="padding:32px 32px 120px">
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px;margin-bottom:26px">
+            <label class="check"><input type="checkbox" checked="{{ filtroSemSite }}" onChange="{{ alternarSemSite }}"><span class="box"><i class="ph ph-check"></i></span>Só quem não tem site</label>
+            <div class="field" style="min-width:150px">
+              <label for="ap-nota">Nota mínima</label>
+              <select class="input" id="ap-nota" value="{{ notaMin }}" onChange="{{ mudarNota }}">
+                <option value="0">Qualquer nota</option>
+                <option value="4">4,0 ou mais</option>
+                <option value="4.5">4,5 ou mais</option>
+              </select>
+            </div>
+            <button class="btn btn-ghost" onClick="{{ limparFiltros }}" style="margin-bottom:4px">Limpar filtros</button>
+          </div>
+
+          <sc-if value="{{ temSel }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 18px;margin-bottom:14px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:inset 0 0 0 1px var(--color-accent);animation:klRise .16s ease-out">
+              <span style="font-size:14px;color:var(--color-accent)">{{ rotuloSel }}</span>
+              <span style="margin-left:auto;display:flex;flex-wrap:wrap;gap:8px">
+                <button class="btn btn-secondary" onClick="{{ abrirExportar }}"><i class="ph ph-download-simple" style="font-size:15px"></i> Exportar seleção</button>
+                <button class="btn btn-secondary"><i class="ph ph-list-plus" style="font-size:15px"></i> Salvar como lista</button>
+                <button class="btn btn-ghost" onClick="{{ limparSel }}">Limpar</button>
+              </span>
+            </div>
+          </sc-if>
+
+          <div style="border-radius:var(--radius-lg);background:var(--color-surface);box-shadow:var(--shadow-md);overflow:hidden">
+            <sc-if value="{{ rodando }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:18px 8px">
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 14px 18px">
+                  <i class="ph ph-circle-notch" style="font-size:16px;color:var(--color-accent);animation:klSpin .8s linear infinite"></i>
+                  <span class="text-muted" style="font-size:13px">Varrendo o mapa em {{ regiao }}…</span>
+                </div>
+                <sc-for list="{{ esqueleto }}" as="e" hint-placeholder-count="8">
+                  <div style="display:flex;gap:16px;padding:13px 14px;animation:klPulse 1.1s ease-in-out infinite">
+                    <span style="height:11px;border-radius:3px;background:var(--color-neutral-700);flex:2.4"></span>
+                    <span style="height:11px;border-radius:3px;background:var(--color-neutral-700);flex:1.1"></span>
+                    <span style="height:11px;border-radius:3px;background:var(--color-neutral-700);flex:1.5"></span>
+                    <span style="height:11px;border-radius:3px;background:var(--color-neutral-700);flex:.6"></span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ temLinhas }}" hint-placeholder-val="{{ true }}">
+              <div>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th style="width:44px;padding-left:20px">
+                        <label class="check"><input type="checkbox" ref="{{ refCabecalho }}" checked="{{ paginaMarcada }}" onChange="{{ selecionarPagina }}"><span class="box"><i class="ph ph-check"></i></span></label>
+                      </th>
+                      <th>Empresa</th>
+                      <th>Telefone</th>
+                      <th>Site</th>
+                      <th style="text-align:right">Nota</th>
+                      <th style="text-align:right;padding-right:20px">Avaliações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <sc-for list="{{ linhas }}" as="l" hint-placeholder-count="8">
+                      <tr>
+                        <td style="padding:12px 8px 12px 20px">
+                          <label class="check"><input type="checkbox" checked="{{ l.marcado }}" onChange="{{ l.alternar }}"><span class="box"><i class="ph ph-check"></i></span></label>
+                        </td>
+                        <td style="padding:12px 8px;cursor:pointer" onClick="{{ l.abrir }}">
+                          <div style="font-family:var(--font-heading)">{{ l.nome }}</div>
+                          <div class="text-muted" style="font-size:11px;margin-top:2px">{{ l.endereco }}</div>
+                        </td>
+                        <td style="padding:12px 8px;font-variant-numeric:tabular-nums;white-space:nowrap">{{ l.telefone }}</td>
+                        <td style="padding:12px 8px">
+                          <sc-if value="{{ l.temSite }}" hint-placeholder-val="{{ true }}">
+                            <span style="color:var(--color-neutral-300)">{{ l.site }}</span>
+                          </sc-if>
+                          <sc-if value="{{ l.semSite }}" hint-placeholder-val="{{ false }}">
+                            <span class="tag tag-accent">sem site</span>
+                          </sc-if>
+                        </td>
+                        <td style="padding:12px 8px;text-align:right;font-variant-numeric:tabular-nums">{{ l.nota }}</td>
+                        <td class="text-muted" style="padding:12px 20px 12px 8px;text-align:right;font-variant-numeric:tabular-nums">{{ l.avaliacoes }}</td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+                <div style="display:flex;align-items:center;gap:6px;padding:14px 20px">
+                  <span class="text-muted" style="font-size:12px;margin-right:auto">{{ faixa }}</span>
+                  <sc-for list="{{ numeros }}" as="p" hint-placeholder-count="3">
+                    <sc-if value="{{ p.atual }}" hint-placeholder-val="{{ false }}">
+                      <button class="btn btn-secondary" style="min-width:34px;color:var(--color-accent);border-color:var(--color-accent)">{{ p.n }}</button>
+                    </sc-if>
+                    <sc-if value="{{ p.outra }}" hint-placeholder-val="{{ true }}">
+                      <button class="btn btn-secondary" onClick="{{ p.ir }}" style="min-width:34px">{{ p.n }}</button>
+                    </sc-if>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ vazioPorFiltro }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:56px 32px">
+                <i class="ph ph-funnel-x" style="font-size:26px;color:var(--color-neutral-500)"></i>
+                <h4 style="margin:16px 0 6px">Nada com esses filtros</h4>
+                <p class="text-muted" style="font-size:13px;max-width:38ch;margin:0 0 18px">Os contatos desta busca existem, mas nenhum atende à combinação atual de filtros.</p>
+                <button class="btn btn-secondary" onClick="{{ limparFiltros }}">Limpar filtros</button>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ ehHistorico }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 32px;border-bottom:1px solid var(--color-divider)">
+          <span style="font-family:var(--font-heading);font-size:16px">Histórico</span>
+          <button class="btn btn-primary" onClick="{{ irBuscar }}" style="margin-left:auto">Nova busca</button>
+        </div>
+        <div style="padding:56px 32px 120px;max-width:900px">
+          <h1 style="font-size:36px;letter-spacing:-.03em;margin:0 0 10px">Toda busca fica guardada.</h1>
+          <p class="text-muted" style="font-size:15px;max-width:46ch;margin:0 0 40px">Reabrir uma busca antiga não gasta crédito — os contatos já são seus.</p>
+          <div style="border-radius:var(--radius-lg);background:var(--color-surface);box-shadow:var(--shadow-md);overflow:hidden">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="padding-left:20px">Busca</th>
+                  <th>Quando</th>
+                  <th style="text-align:right">Contatos</th>
+                  <th style="text-align:right">Créditos</th>
+                  <th style="padding-right:20px"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <sc-for list="{{ historico }}" as="h" hint-placeholder-count="5">
+                  <tr>
+                    <td style="padding:12px 8px 12px 20px">
+                      <div style="font-family:var(--font-heading)">{{ h.nicho }}</div>
+                      <div class="text-muted" style="font-size:11px;margin-top:2px">{{ h.regiao }}</div>
+                    </td>
+                    <td class="text-muted" style="padding:12px 8px;font-size:13px">{{ h.data }}</td>
+                    <td style="padding:12px 8px;text-align:right;font-variant-numeric:tabular-nums">{{ h.contatos }}</td>
+                    <td class="text-muted" style="padding:12px 8px;text-align:right;font-variant-numeric:tabular-nums">{{ h.creditos }}</td>
+                    <td style="padding:12px 20px 12px 8px;text-align:right">
+                      <button class="btn btn-ghost" onClick="{{ h.reabrir }}">Reabrir</button>
+                    </td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ ehListas }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 32px;border-bottom:1px solid var(--color-divider)">
+          <span style="font-family:var(--font-heading);font-size:16px">Minhas listas</span>
+        </div>
+        <div style="padding:80px 32px">
+          <i class="ph ph-list-checks" style="font-size:26px;color:var(--color-neutral-500)"></i>
+          <h4 style="margin:16px 0 6px">Nenhuma lista ainda</h4>
+          <p class="text-muted" style="font-size:13px;max-width:38ch;margin:0 0 18px">Selecione contatos no resultado de uma busca e salve como lista para organizar sua carteira.</p>
+          <button class="btn btn-primary" onClick="{{ irBuscar }}">Fazer uma busca</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ ehConta }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 32px;border-bottom:1px solid var(--color-divider)">
+          <span style="font-family:var(--font-heading);font-size:16px">Conta</span>
+        </div>
+        <div style="padding:80px 32px">
+          <p class="text-muted" style="font-size:14px;max-width:40ch;margin:0">Tela de conta, plano e faturas — próxima etapa.</p>
+        </div>
+      </div>
+    </sc-if>
+
+  </main>
+</div>
+
+<sc-if value="{{ confirmarAberto }}" hint-placeholder-val="{{ false }}">
+  <div class="dialog-backdrop" style="z-index:80" onClick="{{ fecharConfirmar }}">
+    <div class="dialog" style="animation:klRise .16s ease-out">
+      <div class="dialog-title">Gastar {{ estimativa }} créditos?</div>
+      <p class="dialog-body" style="margin:0">Esta busca vai consumir {{ estimativa }} dos seus 1.412 créditos e deixar {{ saldoDepois }} no mês. Contato que já saiu em busca anterior não é cobrado de novo.</p>
+      <div class="dialog-actions">
+        <button class="btn btn-secondary" onClick="{{ fecharConfirmar }}">Cancelar</button>
+        <button class="btn btn-primary" onClick="{{ rodar }}">Buscar contatos</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ exportarAberto }}" hint-placeholder-val="{{ false }}">
+  <div class="dialog-backdrop" style="z-index:80" onClick="{{ fecharExportar }}">
+    <div class="dialog" style="animation:klRise .16s ease-out">
+      <div class="dialog-title">Exportar contatos</div>
+      <p class="dialog-body" style="margin:0">{{ rotuloExport }}. A exportação não gasta crédito.</p>
+      <div class="field">
+        <label>Formato</label>
+        <span class="seg" style="margin-top:2px">
+          <label class="seg-opt"><input type="radio" name="ap-fmt" checked>CSV</label>
+          <label class="seg-opt"><input type="radio" name="ap-fmt">Excel</label>
+        </span>
+      </div>
+      <div>
+        <div class="text-muted" style="font-size:12px;margin-bottom:8px">Campos incluídos</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <span class="tag tag-neutral">Nome</span>
+          <span class="tag tag-neutral">Telefone</span>
+          <span class="tag tag-neutral">WhatsApp</span>
+          <span class="tag tag-neutral">Site</span>
+          <span class="tag tag-neutral">Endereço</span>
+          <span class="tag tag-neutral">Nota</span>
+          <span class="tag tag-neutral">Avaliações</span>
+          <span class="tag tag-neutral">Link do Maps</span>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-secondary" onClick="{{ fecharExportar }}">Cancelar</button>
+        <button class="btn btn-primary" onClick="{{ confirmarExportar }}">Exportar</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ leadAberto }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;z-index:80;background:color-mix(in srgb, var(--color-neutral-900) 50%, transparent)" onClick="{{ fecharDrawer }}">
+    <div style="position:absolute;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--color-surface);box-shadow:var(--shadow-lg);padding:24px;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <div style="min-width:0">
+          <div class="card-kicker">{{ lead.categoria }} · {{ lead.bairro }}</div>
+          <h3 style="margin:6px 0 0">{{ lead.nome }}</h3>
+        </div>
+        <button class="btn btn-icon btn-secondary" style="margin-left:auto;flex:none" onClick="{{ fecharDrawer }}"><i class="ph ph-x" style="font-size:15px"></i></button>
+      </div>
+      <sc-if value="{{ leadSemSite }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:var(--radius-md);box-shadow:inset 0 0 0 1px var(--color-accent)">
+          <i class="ph ph-lightning" style="font-size:16px;color:var(--color-accent)"></i>
+          <span style="font-size:13px;color:var(--color-accent-300)">Não tem site — oportunidade quente</span>
+        </div>
+      </sc-if>
+      <div style="display:flex;flex-direction:column;gap:13px;font-size:14px">
+        <div style="display:flex;justify-content:space-between;gap:12px"><span class="text-muted">Telefone</span><span style="font-variant-numeric:tabular-nums">{{ lead.telefone }}</span></div>
+        <sc-if value="{{ leadTemSite }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;justify-content:space-between;gap:12px"><span class="text-muted">Site</span><span>{{ lead.site }}</span></div>
+        </sc-if>
+        <div style="display:flex;justify-content:space-between;gap:12px"><span class="text-muted">Nota</span><span>{{ lead.nota }}</span></div>
+        <div style="display:flex;justify-content:space-between;gap:12px"><span class="text-muted">Avaliações</span><span style="font-variant-numeric:tabular-nums">{{ lead.avaliacoes }}</span></div>
+        <div style="display:flex;justify-content:space-between;gap:12px"><span class="text-muted">Endereço</span><span>{{ lead.endereco }}</span></div>
+      </div>
+      <div style="height:1px;background:var(--color-divider)"></div>
+      <div class="field">
+        <label for="ap-obs">Observação</label>
+        <textarea class="input" id="ap-obs" placeholder="Anote o contexto da abordagem"></textarea>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:auto">
+        <button class="btn btn-primary btn-block" style="margin:0"><i class="ph ph-whatsapp-logo" style="font-size:16px"></i> Abrir WhatsApp</button>
+        <button class="btn btn-secondary btn-block" style="margin:0">Copiar contato</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ toastAberto }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;bottom:24px;right:24px;z-index:90;display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-lg);animation:klRise .18s ease-out">
+    <i class="ph ph-check-circle" style="font-size:18px;color:var(--color-accent)"></i>
+    <span style="font-size:14px">Arquivo gerado — o download começou</span>
+    <button class="btn btn-ghost" style="font-size:13px">Ver exportações</button>
+  </div>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;telaInicial&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;buscar&quot;,&quot;resultado&quot;,&quot;historico&quot;],&quot;default&quot;:&quot;buscar&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Protótipo&quot;}}">
+const NICHES = {
+  'Odontologia': ['Sorriso Real Odontologia','OdontoCenter Vila Nova','Clínica Bellini','Instituto Prime Odonto','Dental Alvorada','Ortoville','Espaço Dente & Cia','Clínica Vita Oral','OdontoLife','Sorridents'],
+  'Academias': ['Fit Nova Era','Academia Corpo Livre','Studio Pulse','Arena Fitness','CrossBox 27','Academia Movimento','Studio Ritmo','Iron House','Espaço Vital','Academia Alto Rendimento'],
+  'Restaurantes': ['Cantina do Porto','Sabor da Serra','Restaurante Dona Alzira','Casa Fogo','Bistrô Nove','Mercado Grill','Tempero Novo','Villa Pasta','Comedoria Central','Peixaria do Zé'],
+  'Pet shops': ['Pet Amigo','Mundo Cão','Clínica Vet Patinhas','Pet Shop Estrela','Casa dos Bichos','AuMiau Center','Vet & Pet Jardim','Banho e Tosa Lili','PetCare Norte','Reino Animal'],
+  'Advocacia': ['Almeida & Associados','Escritório Vieira Lima','Barros Advocacia','Nunes Advogados','Costa & Prado','Advocacia Meridiano','Ferraz Advogados','Lima Rocha Direito','Escritório Aurora','Tavares Jurídico'],
+  'Estética e beleza': ['Espaço Belle','Clínica Lumina','Studio Glow','Estética Nova Pele','Bella Forma','Salão Atelier 12','Clínica Renove','Studio Marés','Beleza Pura','Instituto Aura'],
+  'Oficinas mecânicas': ['Auto Center Rodas','Oficina do Tião','Mecânica Precisa','Turbo Motors','Auto Elétrica Central','Garagem 44','Oficina Bom Freio','Multi Auto Serviços','Mecânica São Jorge','Car Point']
+};
+const CATEGORIA = {
+  'Odontologia': 'Clínica odontológica', 'Academias': 'Academia', 'Restaurantes': 'Restaurante',
+  'Pet shops': 'Pet shop', 'Advocacia': 'Escritório de advocacia', 'Estética e beleza': 'Clínica de estética',
+  'Oficinas mecânicas': 'Oficina mecânica'
+};
+const DDD = { 'são paulo': '11', 'campinas': '19', 'rio de janeiro': '21', 'belo horizonte': '31', 'curitiba': '41', 'porto alegre': '51', 'florianópolis': '48', 'salvador': '71', 'recife': '81', 'fortaleza': '85', 'brasília': '61', 'goiânia': '62', 'manaus': '92', 'belém': '91' };
+const BAIRROS_POR_CIDADE = {
+  'são paulo': ['Centro','Vila Mariana','Bela Vista','Jardim América','Santa Cecília','Pinheiros'],
+  'campinas': ['Centro','Cambuí','Taquaral','Barão Geraldo','Jardim Guanabara'],
+  'rio de janeiro': ['Centro','Tijuca','Botafogo','Copacabana','Barra da Tijuca'],
+  'belo horizonte': ['Centro','Savassi','Funcionários','Pampulha','Buritis'],
+  'curitiba': ['Centro','Batel','Água Verde','Bairro Alto','Alto da Glória','Portão'],
+  'porto alegre': ['Centro Histórico','Moinhos de Vento','Cidade Baixa','Petrópolis','Menino Deus'],
+  'florianópolis': ['Centro','Trindade','Campeche','Lagoa da Conceição','Estreito'],
+  'salvador': ['Barra','Pituba','Rio Vermelho','Itaigara','Ondina'],
+  'recife': ['Boa Viagem','Espinheiro','Graças','Pina','Santo Amaro'],
+  'fortaleza': ['Aldeota','Meireles','Centro','Cocó','Benfica'],
+  'brasília': ['Asa Norte','Asa Sul','Águas Claras','Sudoeste','Lago Norte'],
+  'goiânia': ['Setor Oeste','Setor Bueno','Setor Marista','Centro','Jardim Goiás'],
+  'manaus': ['Centro','Adrianópolis','Ponta Negra','Cidade Nova','Parque 10'],
+  'belém': ['Nazaré','Batista Campos','Umarizal','Cidade Velha','Marco']
+};
+const BAIRROS_PADRAO = ['Centro','Zona Norte','Zona Sul','Zona Leste','Zona Oeste'];
+
+const NAV = [
+  { id: 'buscar', nome: 'Nova busca', icone: 'ph ph-magnifying-glass' },
+  { id: 'listas', nome: 'Minhas listas', icone: 'ph ph-list-checks' },
+  { id: 'historico', nome: 'Histórico', icone: 'ph ph-clock-counter-clockwise' },
+  { id: 'conta', nome: 'Conta', icone: 'ph ph-user-circle' }
+];
+
+const SUGESTOES = [
+  { nicho: 'Estética e beleza', regiao: 'Curitiba, PR' },
+  { nicho: 'Odontologia', regiao: 'Curitiba, PR' },
+  { nicho: 'Academias', regiao: 'Curitiba, PR' },
+  { nicho: 'Restaurantes', regiao: 'Curitiba, PR' }
+];
+
+const HISTORICO = [
+  { nicho: 'Pet shops', regiao: 'Curitiba, PR', data: '4 ago, 14:20', contatos: 24, creditos: 24 },
+  { nicho: 'Estética e beleza', regiao: 'Curitiba, PR', data: '3 ago, 09:41', contatos: 31, creditos: 31 },
+  { nicho: 'Odontologia', regiao: 'São José dos Pinhais, PR', data: '1 ago, 16:03', contatos: 18, creditos: 18 },
+  { nicho: 'Academias', regiao: 'Curitiba, PR', data: '28 jul, 11:12', contatos: 22, creditos: 22 },
+  { nicho: 'Advocacia', regiao: 'Porto Alegre, RS', data: '24 jul, 15:38', contatos: 40, creditos: 40 }
+];
+
+function hash(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function slug(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '').slice(0, 16);
+}
+function cityKey(r) { return r.toLowerCase().split(',')[0].trim(); }
+function acharEm(mapa, regiao, padrao) {
+  const r = cityKey(regiao);
+  for (const k in mapa) if (r.indexOf(k) > -1) return mapa[k];
+  return padrao;
+}
+
+const FATOR = { cidade: 1, metro: 1.8, estado: 3.4 };
+
+function totalLeads(nicho, regiao, alcance) {
+  const base = 14 + (hash(nicho + '|' + regiao) % 13);
+  return Math.round(base * (FATOR[alcance] || 1));
+}
+
+function buildLeads(nicho, regiao, alcance) {
+  const nomes = NICHES[nicho] || NICHES['Pet shops'];
+  const ddd = acharEm(DDD, regiao, '11');
+  const bairros = acharEm(BAIRROS_POR_CIDADE, regiao, BAIRROS_PADRAO);
+  const cidade = regiao.split(',')[0].trim() || 'São Paulo';
+  const total = totalLeads(nicho, regiao, alcance);
+  const out = [];
+  for (let i = 0; i < total; i++) {
+    const base = nomes[i % nomes.length];
+    const h = hash(base + cidade + i);
+    const bairro = bairros[(h >>> 7) % bairros.length];
+    const nome = i < nomes.length ? base : base + ' — ' + bairro;
+    const temSite = (h % 100) > 34;
+    const r = 3.6 + ((h >>> 3) % 15) / 10;
+    out.push({
+      id: 'l' + i,
+      nome,
+      bairro,
+      endereco: bairro + ', ' + cidade,
+      categoria: CATEGORIA[nicho] || 'Negócio local',
+      telefone: '(' + ddd + ') 3' + (100 + (h % 900)) + '-' + (1000 + ((h >>> 5) % 9000)),
+      site: temSite ? slug(base) + '.com.br' : '',
+      semSite: !temSite,
+      nota: (r > 5 ? 5 : r).toFixed(1),
+      avaliacoes: 12 + ((h >>> 11) % 780)
+    });
+  }
+  return out;
+}
+
+const POR_PAGINA = 8;
+
+class Component extends DCLogic {
+  state = {
+    tela: null, nicho: null, regiao: null, alcance: 'metro',
+    status: 'form', semSite: false, notaMin: '0',
+    sel: [], drawer: null, confirmar: false, exportar: false, toast: false, pagina: 1
+  };
+
+  ir = id => () => this.setState({ tela: id, drawer: null });
+  irCache = id => {
+    this._ir = this._ir || {};
+    if (!this._ir[id]) this._ir[id] = this.ir(id);
+    return this._ir[id];
+  };
+
+  mudarNicho = e => this.setState({ nicho: e.target.value, sel: [], pagina: 1 });
+  mudarRegiao = e => this.setState({ regiao: e.target.value, sel: [], pagina: 1 });
+
+  usarSugestao = (nicho, regiao) => () => this.setState({ nicho, regiao, sel: [], pagina: 1 });
+  sugestaoCache = (nicho, regiao) => {
+    const k = nicho + '|' + regiao;
+    this._sg = this._sg || {};
+    if (!this._sg[k]) this._sg[k] = this.usarSugestao(nicho, regiao);
+    return this._sg[k];
+  };
+
+  setAlcance = a => () => this.setState({ alcance: a, sel: [], pagina: 1 });
+  alcCache = a => {
+    this._al = this._al || {};
+    if (!this._al[a]) this._al[a] = this.setAlcance(a);
+    return this._al[a];
+  };
+
+  abrirConfirmar = () => this.setState({ confirmar: true });
+  fecharConfirmar = () => this.setState({ confirmar: false });
+
+  rodar = () => {
+    clearTimeout(this._t);
+    this.setState({ confirmar: false, status: 'rodando', tela: 'resultado', sel: [], pagina: 1 });
+    this._t = setTimeout(() => this.setState({ status: 'pronto' }), 1100);
+  };
+
+  reabrir = (nicho, regiao) => () => this.setState({ nicho, regiao, tela: 'resultado', status: 'pronto', sel: [], pagina: 1 });
+  reabrirCache = (nicho, regiao) => {
+    const k = 'r' + nicho + '|' + regiao;
+    this._sg = this._sg || {};
+    if (!this._sg[k]) this._sg[k] = this.reabrir(nicho, regiao);
+    return this._sg[k];
+  };
+
+  alternarSemSite = () => this.setState(s => ({ semSite: !s.semSite, pagina: 1, sel: [] }));
+  mudarNota = e => this.setState({ notaMin: e.target.value, pagina: 1, sel: [] });
+  limparFiltros = () => this.setState({ semSite: false, notaMin: '0', pagina: 1 });
+
+  alternarSel = id => () => this.setState(s => ({
+    sel: s.sel.indexOf(id) > -1 ? s.sel.filter(x => x !== id) : s.sel.concat([id])
+  }));
+  selCache = id => {
+    this._sc = this._sc || {};
+    if (!this._sc[id]) this._sc[id] = this.alternarSel(id);
+    return this._sc[id];
+  };
+  selecionarPagina = () => {
+    const ids = this._pagina.map(l => l.id);
+    const todos = ids.every(i => this.state.sel.indexOf(i) > -1);
+    this.setState({ sel: todos ? [] : ids });
+  };
+  limparSel = () => this.setState({ sel: [] });
+
+  abrirLead = id => () => this.setState({ drawer: id });
+  leadCache = id => {
+    this._lc = this._lc || {};
+    if (!this._lc[id]) this._lc[id] = this.abrirLead(id);
+    return this._lc[id];
+  };
+  fecharDrawer = () => this.setState({ drawer: null });
+
+  abrirExportar = () => this.setState({ exportar: true });
+  fecharExportar = () => this.setState({ exportar: false });
+  confirmarExportar = () => {
+    clearTimeout(this._tt);
+    this.setState({ exportar: false, toast: true });
+    this._tt = setTimeout(() => this.setState({ toast: false }), 2600);
+  };
+
+  mudarPagina = n => () => this.setState({ pagina: n });
+  paginaCache = n => {
+    this._pc = this._pc || {};
+    if (!this._pc[n]) this._pc[n] = this.mudarPagina(n);
+    return this._pc[n];
+  };
+
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._tt); }
+
+  renderVals() {
+    const st = this.state;
+    const tela = st.tela ?? this.props.telaInicial ?? 'buscar';
+    const nicho = st.nicho ?? 'Pet shops';
+    const regiao = st.regiao ?? 'Curitiba, PR';
+    const alcance = st.alcance || 'metro';
+    const key = [tela, nicho, regiao, alcance, st.status, st.semSite, st.notaMin, st.pagina, st.sel.join(','), st.drawer, st.confirmar, st.exportar, st.toast].join('~');
+    if (this._key === key) return this._v;
+
+    const todos = buildLeads(nicho, regiao, alcance);
+    const notaMin = parseFloat(st.notaMin) || 0;
+    const filtrados = todos.filter(l => (!st.semSite || l.semSite) && parseFloat(l.nota) >= notaMin);
+    const paginas = Math.max(1, Math.ceil(filtrados.length / POR_PAGINA));
+    const pagina = Math.min(st.pagina, paginas);
+    const inicio = (pagina - 1) * POR_PAGINA;
+    const naPagina = filtrados.slice(inicio, inicio + POR_PAGINA);
+    this._pagina = naPagina;
+
+    const linhas = naPagina.map(l => {
+      const marcado = st.sel.indexOf(l.id) > -1;
+      return Object.assign({}, l, {
+        marcado, naoMarcado: !marcado,
+        temSite: !l.semSite,
+        alternar: this.selCache(l.id),
+        abrir: this.leadCache(l.id)
+      });
+    });
+
+    const nums = [];
+    for (let p = 1; p <= paginas; p++) {
+      nums.push({ n: p, atual: p === pagina, outra: p !== pagina, ir: this.paginaCache(p) });
+    }
+
+    const lead = st.drawer ? todos.filter(l => l.id === st.drawer)[0] : null;
+    const semSiteCount = todos.filter(l => l.semSite).length;
+    const idsPagina = naPagina.map(l => l.id);
+    const marcadosPagina = idsPagina.filter(i => st.sel.indexOf(i) > -1).length;
+    const paginaMarcada = idsPagina.length > 0 && marcadosPagina === idsPagina.length;
+    const parcial = marcadosPagina > 0 && !paginaMarcada;
+
+    this._key = key;
+    this._v = {
+      nav: NAV.map(n => ({ nome: n.nome, icone: n.icone, ativo: n.id === tela || (tela === 'resultado' && n.id === 'buscar'), inativo: !(n.id === tela || (tela === 'resultado' && n.id === 'buscar')), ir: this.irCache(n.id) })),
+      creditos: '1.412',
+      ehBuscar: tela === 'buscar',
+      ehResultado: tela === 'resultado',
+      ehHistorico: tela === 'historico',
+      ehListas: tela === 'listas',
+      ehConta: tela === 'conta',
+      nicho, regiao,
+      estimativa: todos.length,
+      saldoDepois: (1412 - todos.length).toLocaleString('pt-BR'),
+      sugestoes: SUGESTOES.map(s => ({ rotulo: s.nicho + ' · ' + s.regiao.split(',')[0], usar: this.sugestaoCache(s.nicho, s.regiao) })),
+      historico: HISTORICO.map(h => ({
+        nicho: h.nicho, regiao: h.regiao, data: h.data, contatos: h.contatos, creditos: h.creditos,
+        reabrir: this.reabrirCache(h.nicho, h.regiao)
+      })),
+      rodando: st.status === 'rodando',
+      pronto: st.status === 'pronto',
+      esqueleto: [1, 2, 3, 4, 5, 6, 7, 8],
+      linhas,
+      temLinhas: st.status === 'pronto' && filtrados.length > 0,
+      vazioPorFiltro: st.status === 'pronto' && filtrados.length === 0,
+      titulo: nicho + ' em ' + regiao.split(',')[0],
+      resumo: filtrados.length + ' de ' + todos.length + ' contatos · ' + semSiteCount + ' sem site',
+      faixa: filtrados.length ? (inicio + 1) + '–' + Math.min(inicio + POR_PAGINA, filtrados.length) + ' de ' + filtrados.length : '0 de 0',
+      numeros: nums,
+      filtroSemSite: st.semSite,
+      notaMin: st.notaMin,
+      qtdSel: st.sel.length,
+      temSel: st.sel.length > 0,
+      paginaMarcada,
+      refCabecalho: el => { if (el) el.indeterminate = parcial; },
+      alcCidade: alcance === 'cidade',
+      alcMetro: alcance === 'metro',
+      alcEstado: alcance === 'estado',
+      setCidade: this.alcCache('cidade'),
+      setMetro: this.alcCache('metro'),
+      setEstado: this.alcCache('estado'),
+      rotuloSel: st.sel.length + (st.sel.length === 1 ? ' contato selecionado' : ' contatos selecionados'),
+      confirmarAberto: st.confirmar,
+      exportarAberto: st.exportar,
+      toastAberto: st.toast,
+      rotuloExport: st.sel.length > 0 ? st.sel.length + ' contatos selecionados' : filtrados.length + ' contatos filtrados',
+      leadAberto: !!lead,
+      lead: lead || {},
+      leadTemSite: !!(lead && !lead.semSite),
+      leadSemSite: !!(lead && lead.semSite),
+      irHistorico: this.irCache('historico'),
+      irBuscar: this.irCache('buscar'),
+      mudarNicho: this.mudarNicho,
+      mudarRegiao: this.mudarRegiao,
+      abrirConfirmar: this.abrirConfirmar,
+      fecharConfirmar: this.fecharConfirmar,
+      rodar: this.rodar,
+      alternarSemSite: this.alternarSemSite,
+      mudarNota: this.mudarNota,
+      limparFiltros: this.limparFiltros,
+      selecionarPagina: this.selecionarPagina,
+      limparSel: this.limparSel,
+      fecharDrawer: this.fecharDrawer,
+      abrirExportar: this.abrirExportar,
+      fecharExportar: this.fecharExportar,
+      confirmarExportar: this.confirmarExportar
+    };
+    return this._v;
+  }
+}
+
+</script>
+</body>
+</html>

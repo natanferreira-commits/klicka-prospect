@@ -39,24 +39,17 @@ type PlanInfo = {
   id: string;
   name: string;
   limits: {
-    searchesPerMonth: number;
-    resultsPerSearch: number;
-    enrichPerMonth: number | null;
+    creditsPerMonth: number;
     sources: Source[];
     exportCsv: boolean;
     historyDays: number;
   };
 };
-type UsageInfo = {
-  period: string;
-  searches: number;
-  leads: number;
-  exports: number;
-};
+type CreditsInfo = { used: number; limit: number; remaining: number };
 
 export default function Home() {
   const [plan, setPlan] = useState<PlanInfo | null>(null);
-  const [usage, setUsage] = useState<UsageInfo | null>(null);
+  const [credits, setCredits] = useState<CreditsInfo | null>(null);
   const [upgradeNotice, setUpgradeNotice] = useState<string | null>(null);
   const [stage, setStage] = useState<Stage>("search");
   const [source, setSource] = useState<Source>("places");
@@ -133,7 +126,7 @@ export default function Home() {
       if (res.ok) {
         const d = await res.json();
         setPlan(d.plan);
-        setUsage(d.usage);
+        setCredits(d.credits);
       }
     } catch {
       // best-effort
@@ -376,20 +369,20 @@ export default function Home() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/klicka-logo.png" alt="klicka." style={{ height: 20, width: "auto" }} />
           <div className="flex items-center gap-4">
-            {plan && usage && (
+            {plan && credits && (
               <span
                 className="text-xs text-neutral-400"
                 title={`Plano ${plan.name}`}
               >
-                <span className="text-neutral-500">Buscas: </span>
+                <span className="text-neutral-500">Créditos: </span>
                 <span
                   className={
-                    usage.searches >= plan.limits.searchesPerMonth
+                    credits.remaining <= 0
                       ? "text-amber-400 font-semibold"
                       : "text-neutral-200 font-semibold"
                   }
                 >
-                  {usage.searches}/{plan.limits.searchesPerMonth}
+                  {credits.remaining}
                 </span>
                 <span className="text-neutral-600"> · {plan.name}</span>
               </span>

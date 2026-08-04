@@ -8,7 +8,8 @@ telefone, site, nota, nº de avaliações, endereço). Público: quem vende serv
 empresa — designers, gestores de tráfego, social media, agências.
 
 Este pacote contém a direção visual fechada, os tokens, a especificação dos componentes,
-a arquitetura de informação completa e três telas de referência.
+a arquitetura de informação completa e cinco arquivos de referência: landing, design system,
+sitemap, fluxo de acesso e o núcleo do app (busca, resultado, histórico).
 
 ## Sobre os arquivos de design
 
@@ -153,6 +154,12 @@ Rótulo acima, 12px, `text` a 70%. Input: altura mínima 36px (44px em hero), pa
 Hover: borda `text` 45%. Foco: borda `accent` sem offset.
 Erro: borda `accent-400` + linha de 12px em `accent-300` com ícone `warning-circle` 14px.
 Desabilitado: opacidade 45%.
+Checkbox (`.check` + `.box`): caixa de 16px, raio 4px, borda 1.5px `divider`; marcada =
+fundo `accent` com o glifo `ph-check` na cor do fundo; **indeterminada** (parte da página
+selecionada) = borda `accent` com `inset 0 0 0 4px accent`. O input nativo fica oculto
+(`position:absolute; opacity:0`) e o `.box` é o alvo visual. Em React o checkbox de
+"selecionar tudo" precisa de `checked` controlado **e** `indeterminate` via ref — sem isso
+ele mente sobre a seleção.
 Radio: círculo 16px, borda 1.5px; marcado = fundo `accent` com `inset 0 0 0 4px` do fundo.
 Segmented: grupo com borda `divider`, raio 8px, separador interno sólido de 1px; opção
 selecionada recebe `inset 0 0 0 1px accent` e texto `accent`.
@@ -291,6 +298,95 @@ Resumo do que é **MVP**:
 - Produto: `/app/buscar` · `/app/buscas/:id` · `/app/historico`
 - Conta: `/app/conta` · `/app/conta/plano` · `/app/checkout`
 
+### 4. Acesso — `design/Klicka Acesso.dc.html`
+
+Oito estados navegáveis pela barra de protótipo no canto inferior esquerdo (essa barra é
+andaime de protótipo, **não vai para produção**).
+
+Layout comum a todas: grid de duas colunas, `minmax(0,1fr) auto`. Coluna esquerda com
+padding 56px, logo de 22px no topo, coluna de formulário de `max-width: 400px` centrada
+verticalmente, links Termos/Privacidade/Ajuda (12px, `neutral-500`) no pé. Coluna direita
+é um `<aside>` com `border-left: 1px divider`, padding 56px 48px, gradiente sutil de
+`surface` a 55% em 200deg: kicker "O QUE TE ESPERA", h3 de 22ch, uma tabela de 3 contatos
+reais (com a tag "sem site" numa linha) e uma frase de 13px. **Quando a coluna de prova é
+removida, a segunda track precisa colapsar** — por isso `auto` e não `fr`.
+
+Títulos de todas as telas: 38px, letter-spacing -0.03em. Botão primário de 44px.
+
+1. `/entrar` — "Bem-vindo de volta." E-mail, senha com "Esqueci a senha" alinhado à direita
+   do rótulo, primary "Entrar", divisor "OU" entre duas réguas, "Continuar com Google"
+   (secondary, ícone `google-logo`), rodapé "Ainda não tem conta? Criar conta grátis".
+2. `/cadastro` — "Crie sua conta." E-mail de trabalho, senha com dica "8 caracteres, com
+   uma letra e um número", primary "Criar conta", Google, aceite de termos em 12px, link
+   para entrar. Envia para a confirmação de e-mail.
+3. `/recuperar` — link "Voltar para o login" com ícone `arrow-left` acima do título.
+   Campo de e-mail + "Enviar link". Copy: link válido por 30 minutos.
+4. `/recuperar` (enviado) — ícone `envelope-simple` em accent, "Link enviado.", e-mail em
+   destaque, "Enviar de novo". **Não revela se o e-mail existe** — a copy manda conferir o
+   spam e o endereço, nunca "e-mail não cadastrado".
+5. `/recuperar/:token` — "Defina a nova senha." Medidor de força de 3 segmentos (3px,
+   raio 2px): preenchidos em `accent`, vazios em `neutral-800`, rótulo à direita em 11px
+   (Muito curta / Fraca / Boa / Forte). Regras: ≥8 caracteres = 1, letra + número = 2,
+   ≥12 caracteres ou símbolo = 3. Copy avisa que as outras sessões são encerradas.
+6. `/recuperar/:token` (expirado) — ícone `clock-countdown` em `neutral-500`,
+   "Esse link expirou.", primary "Pedir novo link".
+7. `/confirmar/:token` — ícone `envelope-open`, "Confirme seu e-mail.", "Reenviar link",
+   link para corrigir o endereço.
+8. `/inicio` (onboarding) — 2 passos, kicker "PASSO N DE 2" com traço de 44px em accent.
+   Passo 1 "O que você vende?": 6 chips (Criação de site, Gestão de tráfego, Social media,
+   Identidade visual, SEO local, Automação e CRM). Chip selecionado = `inset 0 0 0 1px
+   accent` + texto accent + ícone `check` (mesmo tratamento do segmented selecionado).
+   "Continuar" fica **desabilitado** com seleção vazia. Passo 2 "Onde você atua?": cidade
+   principal + segmented de alcance, primary "Ir para a primeira busca".
+
+### 5. Núcleo do app — `design/Klicka App.dc.html`
+
+Shell descrito na seção "Shell do app". Sidebar com 4 destinos (Nova busca / Minhas listas
+/ Histórico / Conta), medidor de crédito e link Ajuda no pé. Conteúdo com padding 32px.
+
+**`/app/buscar`** — h1 40px "O que você quer prospectar?". Grid de dois campos (nicho,
+região) em `minmax(240px,1fr)`, máx. 620px. Segmented "Alcance": Só a cidade / Região
+metropolitana / Estado inteiro. Painel de estimativa (`surface`, raio 14px, `shadow-sm`,
+máx. 620px) com três números de 26px: negócios, custo em créditos e — alinhado à direita,
+em accent — o saldo depois da busca. Nota de 12px: contato repetido não é cobrado.
+Primary "Buscar contatos" + link para reabrir busca antiga. No fim, bloco de sugestões por
+nicho baseado no que a pessoa marcou no onboarding.
+
+**A estimativa precisa ser real.** No protótipo ela deriva de
+`14 + hash(nicho|região) % 13` multiplicada pelo alcance (cidade ×1, metropolitana ×1.8,
+estado ×3.4) — e o mesmo número aparece no painel, no modal de confirmação e na contagem
+de linhas da tabela. Em produção é a contagem da API. O que não pode acontecer é a
+estimativa ser constante ou divergir do resultado.
+
+Confirmação: modal "Gastar N créditos?" dizendo o saldo que sobra. Cancelar / Buscar
+contatos. Só então roda.
+
+**`/app/buscas/:id`** — topbar com botão `icon` de voltar, título "{Nicho} em {Cidade}",
+resumo "N de M contatos · K sem site" e primary "Exportar" à direita.
+Barra de filtros: checkbox "Só quem não tem site", select de nota mínima (Qualquer / 4,0+ /
+4,5+) e ghost "Limpar filtros". Qualquer mudança de filtro **zera a seleção**.
+Estado `rodando`: linha "Varrendo o mapa em {região}…" com `circle-notch` girando +
+8 linhas de esqueleto.
+Tabela: coluna de checkbox de 44px, empresa (nome + endereço, clicável → drawer),
+telefone, site ou tag "sem site", nota e avaliações à direita. 8 por página.
+Com seleção ativa, aparece acima da tabela uma barra em `surface` com
+`inset 0 0 0 1px accent`: "N contatos selecionados" + Exportar seleção / Salvar como lista
+/ Limpar.
+Drawer do lead: kicker "{categoria} · {bairro}", h3 do nome, e — se não tem site — uma
+faixa com `inset 0 0 0 1px accent` e ícone `lightning`: "Não tem site — oportunidade
+quente". Pares rótulo/valor, campo de observação, e no pé "Abrir WhatsApp" (primary) +
+"Copiar contato".
+Modal de exportação: formato (CSV / Excel), tags dos campos incluídos, aviso de que
+exportar não gasta crédito. Depois: toast "Arquivo gerado — o download começou".
+Vazio por filtro: ícone `funnel-x`, alinhado à esquerda, dentro do painel da tabela.
+
+**`/app/historico`** — h1 36px "Toda busca fica guardada." Tabela: busca (nicho + região),
+quando, contatos, créditos e ghost "Reabrir". **Reabrir não gasta crédito** — está na copy
+e é regra de negócio.
+
+**`/app/listas`** — estado vazio de primeira vez, alinhado à esquerda, com ação
+"Fazer uma busca".
+
 ---
 
 ## Interações e comportamento
@@ -335,9 +431,13 @@ a sidebar de 232px deve virar drawer abaixo de 900px.
 
 ## Estado da aplicação
 
+Fluxo de acesso: `{ email, senha, carregando, enviado, tokenValido, forcaSenha, passo,
+servicos: string[], cidade, alcance }`.
+
 Por tela de busca/resultado:
 
-- `niche`, `region`, filtros (`semSite: boolean`, `notaMinima: number`, `minAvaliacoes: number`)
+- `niche`, `region`, `alcance: 'cidade' | 'metro' | 'estado'`
+- filtros (`semSite: boolean`, `notaMinima: number`, `minAvaliacoes: number`)
 - `status: idle | estimating | running | done | error`
 - `results: Lead[]`, `selectedIds: Set`, `page`, `perPage`, `total`
 - `credits: { used, limit }` — global, exibido na sidebar
@@ -365,6 +465,8 @@ sem créditos. Mais dois do app inteiro: sessão expirada e 404.
 
 ```
 tokens.css                    tokens como CSS custom properties
+design/Klicka Acesso.dc.html  entrar, cadastro, recuperação, confirmação e onboarding
+design/Klicka App.dc.html     nova busca, resultado, histórico e listas (o núcleo)
 tailwind.config.js            os mesmos tokens no vocabulário do Tailwind
 design/Klicka Landing.dc.html landing com a busca funcionando
 design/Klicka DS.dc.html      design system navegável

@@ -20,7 +20,7 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-// Contador agregado: 1 linha por usuario por mes. Base da TRAVA.
+// Contador agregado: 1 linha por usuario por mes. Base da TRAVA de credito.
 // Vira o mes -> nova linha -> reset natural.
 export const usageCounters = pgTable(
   "usage_counters",
@@ -29,11 +29,27 @@ export const usageCounters = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     period: text("period").notNull(), // 'YYYY-MM'
+    creditsUsed: integer("credits_used").notNull().default(0), // 1 credito = 1 contato novo
     searchesCount: integer("searches_count").notNull().default(0),
     leadsExtracted: integer("leads_extracted").notNull().default(0),
     exportsCount: integer("exports_count").notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.userId, t.period] })],
+);
+
+// Memoria de contatos ja entregues ao usuario. Contato repetido nao cobra
+// credito de novo (regra do DS). Chave = user + identidade do contato (placeId).
+export const deliveredContacts = pgTable(
+  "delivered_contacts",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    contactKey: text("contact_key").notNull(), // placeId (Maps) ou ml-<sellerId>
+    firstSeenPeriod: text("first_seen_period").notNull(), // 'YYYY-MM'
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.contactKey] })],
 );
 
 // Historico de buscas (feature de plano pago).

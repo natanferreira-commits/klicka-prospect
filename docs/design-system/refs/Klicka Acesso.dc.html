@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<style>
+body { margin: 0; }
+a:hover { color: var(--color-accent-300); }
+@keyframes klRise { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+@keyframes klSpin { to { transform: rotate(360deg) } }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:
+    radial-gradient(900px 520px at 8% -10%, color-mix(in srgb, var(--color-accent) 11%, transparent), transparent 70%),
+    var(--color-bg);display:grid;grid-template-columns:minmax(0,1fr) auto">
+
+  <div style="padding:56px 56px 120px;display:flex;flex-direction:column;min-width:0">
+    <img src="klicka-logo.png" alt="klicka." style="height:22px;width:auto;align-self:flex-start;flex:none;margin-bottom:auto">
+
+    <div style="max-width:400px;padding:64px 0">
+
+      <sc-if value="{{ ehEntrar }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <h1 style="font-size:38px;letter-spacing:-.03em;margin:0 0 10px">Bem-vindo de volta.</h1>
+          <p class="text-muted" style="font-size:15px;margin:0 0 36px">Suas listas e o histórico de buscas continuam onde você parou.</p>
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <div class="field">
+              <label for="ac-e1">E-mail</label>
+              <input class="input" id="ac-e1" type="email" placeholder="voce@agencia.com.br" style="min-height:44px;font-size:15px">
+            </div>
+            <div class="field">
+              <div style="display:flex;align-items:baseline;gap:12px">
+                <label for="ac-s1" style="margin:0">Senha</label>
+                <a href="#recuperar" onClick="{{ irRecuperar }}" style="margin-left:auto;font-size:12px">Esqueci a senha</a>
+              </div>
+              <input class="input" id="ac-s1" type="password" placeholder="••••••••" style="min-height:44px;font-size:15px;margin-top:5px">
+            </div>
+            <button class="btn btn-primary" onClick="{{ entrar }}" style="min-height:44px;font-size:15px;margin-top:6px">
+              <sc-if value="{{ carregando }}" hint-placeholder-val="{{ false }}">
+                <i class="ph ph-circle-notch" style="font-size:16px;animation:klSpin .8s linear infinite"></i>
+              </sc-if>
+              Entrar
+            </button>
+          </div>
+          <sc-if value="{{ comGoogle }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <div style="display:flex;align-items:center;gap:14px;margin:26px 0">
+                <span style="flex:1;height:1px;background:var(--color-divider)"></span>
+                <span class="text-muted" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase">ou</span>
+                <span style="flex:1;height:1px;background:var(--color-divider)"></span>
+              </div>
+              <button class="btn btn-secondary btn-block" style="min-height:44px;font-size:15px;margin:0"><i class="ph ph-google-logo" style="font-size:17px"></i> Continuar com Google</button>
+            </div>
+          </sc-if>
+          <p class="text-muted" style="font-size:14px;margin:32px 0 0">Ainda não tem conta? <a href="#cadastro" onClick="{{ irCadastro }}">Criar conta grátis</a></p>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ ehCadastro }}" hint-placeholder-val="{{ false }}">
+        <div>
+          <h1 style="font-size:38px;letter-spacing:-.03em;margin:0 0 10px">Crie sua conta.</h1>
+          <p class="text-muted" style="font-size:15px;margin:0 0 36px">25 contatos grátis para testar. Sem cartão e sem chamada de vendas.</p>
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <div class="field">
+              <label for="ac-e2">E-mail de trabalho</label>
+              <input class="input" id="ac-e2" type="email" placeholder="voce@agencia.com.br" style="min-height:44px;font-size:15px">
+            </div>
+            <div class="field">
+              <label for="ac-s2">Senha</label>
+              <input class="input" id="ac-s2" type="password" placeholder="Mínimo de 8 caracteres" style="min-height:44px;font-size:15px">
+              <div class="text-muted" style="font-size:12px;margin-top:6px">8 caracteres, com uma letra e um número.</div>
+            </div>
+            <button class="btn btn-primary" onClick="{{ criarConta }}" style="min-height:44px;font-size:15px;margin-top:6px">
+              <sc-if value="{{ carregando }}" hint-placeholder-val="{{ false }}">
+                <i class="ph ph-circle-notch" style="font-size:16px;animation:klSpin .8s linear infinite"></i>
+              </sc-if>
+              Criar conta
+            </button>
+          </div>
+          <sc-if value="{{ comGoogle }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <div style="display:flex;align-items:center;gap:14px;margin:26px 0">
+                <span style="flex:1;height:1px;background:var(--color-divider)"></span>
+                <span class="text-muted" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase">ou</span>
+                <span style="flex:1;height:1px;background:var(--color-divider)"></span>
+              </div>
+              <button class="btn btn-secondary btn-block" style="min-height:44px;font-size:15px;margin:0"><i class="ph ph-google-logo" style="font-size:17px"></i> Continuar com Google</button>
+            </div>
+          </sc-if>
+          <p class="text-muted" style="font-size:12px;margin:26px 0 0;max-width:38ch">Ao criar a conta você aceita os <a href="#termos">termos de uso</a> e a <a href="#privacidade">política de privacidade</a>.</p>
+          <p class="text-muted" style="font-size:14px;margin:20px 0 0">Já tem conta? <a href="#entrar" onClick="{{ irEntrar }}">Entrar</a></p>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ ehRecuperar }}" hint-placeholder-val="{{ false }}">
+        <div>
+          <a href="#entrar" onClick="{{ irEntrar }}" style="display:inline-flex;align-items:center;gap:6px;font-size:13px;text-decoration:none;margin-bottom:26px"><i class="ph ph-arrow-left" style="font-size:14px"></i>Voltar para o login</a>
+          <h1 style="font-size:38px;letter-spacing:-.03em;margin:0 0 10px">Recuperar acesso.</h1>
+          <p class="text-muted" style="font-size:15px;margin:0 0 36px;max-width:40ch">Informe o e-mail da conta. Mandamos um link de redefinição válido por 30 minutos.</p>
+          <div class="field">
+            <label for="ac-e3">E-mail</label>
+            <input class="input" id="ac-e3" type="email" placeholder="voce@agencia.com.br" style="min-height:44px;font-size:15px">
+          </div>
+          <button class="btn btn-primary btn-block" onClick="{{ enviarLink }}" style="min-height:44px;font-size:15px;margin-top:20px">
+            <sc-if value="{{ carregando }}" hint-placeholder-val="{{ false }}">
+              <i class="ph ph-circle-notch" style="font-size:16px;animation:klSpin .8s linear infinite"></i>
+            </sc-if>
+            Enviar link
+          </button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ ehRecuperarEnviado }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:klRise .18s ease-out">
+          <i class="ph ph-envelope-simple" style="font-size:28px;color:var(--color-accent)"></i>
+          <h1 style="font-size:38px;letter-spacing:-.03em;margin:20px 0 10px">Link enviado.</h1>
+          <p class="text-muted" style="font-size:15px;margin:0 0 32px;max-width:42ch">Mandamos um link de redefinição para <strong style="color:var(--color-text);font-weight:500">voce@agencia.com.br</strong>. Ele expira em 30 minutos.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:10px">
+            <button class="btn btn-secondary" onClick="{{ irNovaSenha }}" style="min-height:40px">Abrir o link (protótipo)</button>
+            <button class="btn btn-ghost" onClick="{{ enviarLink }}">Enviar de novo</button>
+          </div>
+          <p class="text-muted" style="font-size:13px;margin:26px 0 0;max-width:42ch">Não chegou? Confira o spam, ou verifique se o endereço está certo — não dizemos se um e-mail está cadastrado ou não.</p>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ ehNovaSenha }}" hint-placeholder-val="{{ false }}">
+        <div>
+          <h1 style="font-size:38px;letter-spacing:-.03em;margin:0 0 10px">Defina a nova senha.</h1>
+          <p class="text-muted" style="font-size:15px;margin:0 0 36px">Depois de salvar, as outras sessões da conta são encerradas.</p>
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <div class="field">
+              <label for="ac-s3">Nova senha</label>
+              <input class="input" id="ac-s3" type="password" placeholder="••••••••" onChange="{{ medirForca }}" onKeyUp="{{ medirForca }}" style="min-height:44px;font-size:15px">
+              <div style="display:flex;align-items:center;gap:8px;margin-top:9px">
+                <span style="display:flex;gap:4px;flex:1">
+                  <sc-if value="{{ forca1 }}" hint-placeholder-val="{{ false }}"><span style="flex:1;height:3px;border-radius:2px;background:var(--color-accent)"></span></sc-if>
+                  <sc-if value="{{ vazio1 }}" hint-placeholder-val="{{ true }}"><span style="flex:1;height:3px;border-radius:2px;background:var(--color-neutral-800)"></span></sc-if>
+                  <sc-if value="{{ forca2 }}" hint-placeholder-val="{{ false }}"><span style="flex:1;height:3px;border-radius:2px;background:var(--color-accent)"></span></sc-if>
+                  <sc-if value="{{ vazio2 }}" hint-placeholder-val="{{ true }}"><span style="flex:1;height:3px;border-radius:2px;background:var(--color-neutral-800)"></span></sc-if>
+                  <sc-if value="{{ forca3 }}" hint-placeholder-val="{{ false }}"><span style="flex:1;height:3px;border-radius:2px;background:var(--color-accent)"></span></sc-if>
+                  <sc-if value="{{ vazio3 }}" hint-placeholder-val="{{ true }}"><span style="flex:1;height:3px;border-radius:2px;background:var(--color-neutral-800)"></span></sc-if>
+                </span>
+                <span class="text-muted" style="font-size:11px;flex:none">{{ forcaRotulo }}</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="ac-s4">Repita a senha</label>
+              <input class="input" id="ac-s4" type="password" placeholder="••••••••" style="min-height:44px;font-size:15px">
+            </div>
+            <button class="btn btn-primary" onClick="{{ salvarSenha }}" style="min-height:44px;font-size:15px;margin-top:6px">
+              <sc-if value="{{ carregando }}" hint-placeholder-val="{{ false }}">
+                <i class="ph ph-circle-notch" style="font-size:16px;animation:klSpin .8s linear infinite"></i>
+              </sc-if>
+              Salvar e entrar
+            </button>
+          </div>
+          <button class="btn btn-ghost" onClick="{{ alternarToken }}" style="margin-top:22px;font-size:12px;color:var(--color-neutral-500)">Ver estado de link expirado</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ ehTokenExpirado }}" hint-placeholder-val="{{ false }}">
+        <div>
+          <i class="ph ph-clock-countdown" style="font-size:28px;color:var(--color-neutral-500)"></i>
+          <h1 style="font-size:38px;letter-spacing:-.03em;margin:20px 0 10px">Esse link expirou.</h1>
+          <p class="text-muted" style="font-size:15px;margin:0 0 32px;max-width:42ch">Links de redefinição valem 30 minutos e só podem ser usados uma vez. Peça um novo — leva dez segundos.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:10px">
+            <button class="btn btn-primary" onClick="{{ irRecuperar }}" style="min-height:40px">Pedir novo link</button>
+            <button class="btn btn-ghost" onClick="{{ alternarToken }}">Voltar</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ ehConfirmar }}" hint-placeholder-val="{{ false }}">
+        <div style="animation:klRise .18s ease-out">
+          <i class="ph ph-envelope-open" style="font-size:28px;color:var(--color-accent)"></i>
+          <h1 style="font-size:38px;letter-spacing:-.03em;margin:20px 0 10px">Confirme seu e-mail.</h1>
+          <p class="text-muted" style="font-size:15px;margin:0 0 32px;max-width:42ch">Mandamos um link para <strong style="color:var(--color-text);font-weight:500">voce@agencia.com.br</strong>. Confirme para liberar seus 25 contatos grátis.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:10px">
+            <button class="btn btn-primary" onClick="{{ entrar }}" style="min-height:40px">
+              <sc-if value="{{ carregando }}" hint-placeholder-val="{{ false }}">
+                <i class="ph ph-circle-notch" style="font-size:16px;animation:klSpin .8s linear infinite"></i>
+              </sc-if>
+              Já confirmei (protótipo)
+            </button>
+            <button class="btn btn-ghost">Reenviar link</button>
+          </div>
+          <p class="text-muted" style="font-size:13px;margin:26px 0 0;max-width:42ch">E-mail errado? <a href="#cadastro" onClick="{{ irCadastro }}">Corrigir o endereço</a> e receber outro link.</p>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ ehOnboarding }}" hint-placeholder-val="{{ false }}">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:26px">
+            <span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent)">{{ rotuloPasso }}</span>
+            <span style="width:44px;height:1px;background:var(--color-accent);opacity:.6"></span>
+          </div>
+
+          <sc-if value="{{ passo1 }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <h1 style="font-size:38px;letter-spacing:-.03em;margin:0 0 10px">O que você vende?</h1>
+              <p class="text-muted" style="font-size:15px;margin:0 0 30px;max-width:42ch">Serve para sugerir os nichos que costumam fechar com o seu serviço. Dá para mudar depois.</p>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:30px">
+                <sc-for list="{{ servicos }}" as="s" hint-placeholder-count="6">
+                  <sc-if value="{{ s.ativo }}" hint-placeholder-val="{{ false }}">
+                    <button class="btn btn-secondary" onClick="{{ s.alternar }}" style="font-size:14px;padding:9px 16px;color:var(--color-accent);border-color:transparent;box-shadow:inset 0 0 0 1px var(--color-accent)"><i class="ph ph-check" style="font-size:14px"></i>{{ s.nome }}</button>
+                  </sc-if>
+                  <sc-if value="{{ s.inativo }}" hint-placeholder-val="{{ true }}">
+                    <button class="btn btn-secondary" onClick="{{ s.alternar }}" style="font-size:14px;padding:9px 16px">{{ s.nome }}</button>
+                  </sc-if>
+                </sc-for>
+              </div>
+              <p class="text-muted" style="font-size:12px;margin:0 0 22px">{{ resumoServicos }}</p>
+              <button class="btn btn-primary" onClick="{{ proximoPasso }}" disabled="{{ nenhumServico }}" style="min-height:44px;font-size:15px">Continuar <i class="ph ph-arrow-right" style="font-size:16px"></i></button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ passo2 }}" hint-placeholder-val="{{ false }}">
+            <div style="animation:klRise .18s ease-out">
+              <h1 style="font-size:38px;letter-spacing:-.03em;margin:0 0 10px">Onde você atua?</h1>
+              <p class="text-muted" style="font-size:15px;margin:0 0 30px;max-width:42ch">Sua primeira busca já sai pronta com essa região — você só confere e roda.</p>
+              <div style="display:flex;flex-direction:column;gap:18px">
+                <div class="field">
+                  <label for="ac-cid">Cidade principal</label>
+                  <input class="input" id="ac-cid" placeholder="Curitiba, PR" style="min-height:44px;font-size:15px">
+                </div>
+                <div class="field">
+                  <label>Alcance</label>
+                  <span class="seg" style="margin-top:2px">
+                    <label class="seg-opt"><input type="radio" name="ac-raio">Só a cidade</label>
+                    <label class="seg-opt"><input type="radio" name="ac-raio" checked>Região metropolitana</label>
+                    <label class="seg-opt"><input type="radio" name="ac-raio">Estado</label>
+                  </span>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;margin-top:30px">
+                <button class="btn btn-primary" style="min-height:44px;font-size:15px">Ir para a primeira busca</button>
+                <button class="btn btn-ghost" onClick="{{ passoAnterior }}">Voltar</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <div id="fim-telas"></div>
+    </div>
+
+    <div style="margin-top:auto;display:flex;gap:22px;font-size:12px">
+      <a href="#termos" style="color:var(--color-neutral-500);text-decoration:none">Termos</a>
+      <a href="#privacidade" style="color:var(--color-neutral-500);text-decoration:none">Privacidade</a>
+      <a href="#ajuda" style="color:var(--color-neutral-500);text-decoration:none">Ajuda</a>
+    </div>
+  </div>
+
+  <sc-if value="{{ comProva }}" hint-placeholder-val="{{ true }}">
+    <aside style="border-left:1px solid var(--color-divider);padding:56px 48px;display:flex;flex-direction:column;justify-content:center;gap:26px;min-width:0;background:linear-gradient(200deg, color-mix(in srgb, var(--color-surface) 55%, transparent), transparent 60%)">
+      <div>
+        <span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent)">O que te espera</span>
+        <h3 style="margin:14px 0 0;max-width:22ch">Sua primeira lista sai em menos de um minuto.</h3>
+      </div>
+      <div style="border-radius:var(--radius-lg);background:var(--color-surface);box-shadow:var(--shadow-md);overflow:hidden;max-width:460px">
+        <div style="display:flex;align-items:baseline;gap:10px;padding:14px 18px">
+          <span style="font-family:var(--font-heading);font-size:14px">Pet shops em Curitiba</span>
+          <span class="text-muted" style="font-size:11px">248 negócios</span>
+        </div>
+        <table class="table" style="font-size:13px">
+          <tbody>
+            <tr><td style="padding:11px 8px 11px 18px"><div style="font-family:var(--font-heading)">Pet Amigo</div><div class="text-muted" style="font-size:11px;margin-top:2px">Batel</div></td><td style="padding:11px 8px;font-variant-numeric:tabular-nums">(41) 3244-1902</td><td style="padding:11px 18px 11px 8px;text-align:right"><span class="text-muted" style="font-size:11px">petamigo.com.br</span></td></tr>
+            <tr><td style="padding:11px 8px 11px 18px"><div style="font-family:var(--font-heading)">Mundo Cão</div><div class="text-muted" style="font-size:11px;margin-top:2px">Água Verde</div></td><td style="padding:11px 8px;font-variant-numeric:tabular-nums">(41) 3671-4408</td><td style="padding:11px 18px 11px 8px;text-align:right"><span class="tag tag-accent">sem site</span></td></tr>
+            <tr><td style="padding:11px 8px 11px 18px"><div style="font-family:var(--font-heading)">Clínica Vet Patinhas</div><div class="text-muted" style="font-size:11px;margin-top:2px">Portão</div></td><td style="padding:11px 8px;font-variant-numeric:tabular-nums">(41) 3390-7712</td><td style="padding:11px 18px 11px 8px;text-align:right"><span class="text-muted" style="font-size:11px">vetpatinhas.com.br</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-muted" style="font-size:13px;max-width:38ch;margin:0">Nome, telefone, site, nota e nº de avaliações de cada negócio — em CSV, Excel ou direto no seu CRM.</p>
+    </aside>
+  </sc-if>
+</div>
+
+<div style="position:fixed;bottom:20px;left:20px;z-index:60;display:flex;align-items:center;gap:4px;padding:8px 10px;border-radius:var(--radius-lg);background:var(--color-surface);box-shadow:var(--shadow-lg)">
+  <span class="text-muted" style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding-inline:6px 10px">Protótipo</span>
+  <sc-for list="{{ nav }}" as="t" hint-placeholder-count="6">
+    <button class="btn btn-ghost" onClick="{{ t.ir }}" style="flex-direction:column;gap:3px;padding:4px 8px;font-size:12px;color:var(--color-neutral-300)">
+      {{ t.nome }}
+      <sc-if value="{{ t.ativo }}" hint-placeholder-val="{{ false }}">
+        <span style="display:block;width:100%;height:1px;background:var(--color-accent)"></span>
+      </sc-if>
+    </button>
+  </sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;telaInicial&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;entrar&quot;,&quot;cadastro&quot;,&quot;recuperar&quot;,&quot;nova-senha&quot;,&quot;confirmar&quot;,&quot;onboarding&quot;],&quot;default&quot;:&quot;entrar&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Protótipo&quot;},&quot;comProva&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Variantes&quot;},&quot;comGoogle&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Variantes&quot;}}">
+const TELAS = [
+  { id: 'entrar', nome: 'Entrar' },
+  { id: 'cadastro', nome: 'Cadastro' },
+  { id: 'recuperar', nome: 'Recuperar' },
+  { id: 'nova-senha', nome: 'Nova senha' },
+  { id: 'confirmar', nome: 'Confirmar e-mail' },
+  { id: 'onboarding', nome: 'Onboarding' }
+];
+
+const SERVICOS = ['Criação de site', 'Gestão de tráfego', 'Social media', 'Identidade visual', 'SEO local', 'Automação e CRM'];
+
+class Component extends DCLogic {
+  state = { tela: null, carregando: false, enviado: false, step: 1, servicos: [], tokenExpirado: false, forca: 0 };
+
+  ir = id => () => this.setState({ tela: id, carregando: false, enviado: false, step: 1 });
+
+  irPara = id => {
+    this._ir = this._ir || {};
+    if (!this._ir[id]) this._ir[id] = this.ir(id);
+    return this._ir[id];
+  };
+
+  aguardar = destino => {
+    clearTimeout(this._t);
+    this.setState({ carregando: true });
+    this._t = setTimeout(() => this.setState({ tela: destino, carregando: false }), 900);
+  };
+
+  entrar = () => this.aguardar('onboarding');
+  criarConta = () => this.aguardar('confirmar');
+  enviarLink = () => {
+    clearTimeout(this._t);
+    this.setState({ carregando: true });
+    this._t = setTimeout(() => this.setState({ carregando: false, enviado: true }), 900);
+  };
+  salvarSenha = () => this.aguardar('entrar');
+  alternarToken = () => this.setState(s => ({ tokenExpirado: !s.tokenExpirado }));
+  medirForca = e => {
+    const v = e.target.value;
+    let f = 0;
+    if (v.length >= 8) f++;
+    if (/[a-zA-Z]/.test(v) && /[0-9]/.test(v)) f++;
+    if (v.length >= 12 || /[^a-zA-Z0-9]/.test(v)) f++;
+    this.setState({ forca: f });
+  };
+
+  toggleServico = s => () => {
+    this.setState(st => ({
+      servicos: st.servicos.indexOf(s) > -1 ? st.servicos.filter(x => x !== s) : st.servicos.concat([s])
+    }));
+  };
+  servicoHandler = s => {
+    this._sv = this._sv || {};
+    if (!this._sv[s]) this._sv[s] = this.toggleServico(s);
+    return this._sv[s];
+  };
+  proximoPasso = () => this.setState({ step: 2 });
+  passoAnterior = () => this.setState({ step: 1 });
+
+  componentWillUnmount() { clearTimeout(this._t); }
+
+  renderVals() {
+    const tela = this.state.tela ?? this.props.telaInicial ?? 'entrar';
+    const navKey = tela;
+    if (this._navKey !== navKey) {
+      this._navKey = navKey;
+      this._nav = TELAS.map(t => ({ nome: t.nome, ativo: t.id === tela, ir: this.irPara(t.id) }));
+    }
+    const sel = this.state.servicos;
+    const svKey = sel.join('|');
+    if (this._svKey !== svKey) {
+      this._svKey = svKey;
+      this._servicos = SERVICOS.map(s => ({
+        nome: s,
+        ativo: sel.indexOf(s) > -1,
+        inativo: sel.indexOf(s) === -1,
+        alternar: this.servicoHandler(s)
+      }));
+    }
+    const f = this.state.forca;
+    return {
+      nav: this._nav,
+      servicos: this._servicos,
+      ehEntrar: tela === 'entrar',
+      ehCadastro: tela === 'cadastro',
+      ehRecuperar: tela === 'recuperar' && !this.state.enviado,
+      ehRecuperarEnviado: tela === 'recuperar' && this.state.enviado,
+      ehNovaSenha: tela === 'nova-senha' && !this.state.tokenExpirado,
+      ehTokenExpirado: tela === 'nova-senha' && this.state.tokenExpirado,
+      ehConfirmar: tela === 'confirmar',
+      ehOnboarding: tela === 'onboarding',
+      passo1: tela === 'onboarding' && this.state.step === 1,
+      passo2: tela === 'onboarding' && this.state.step === 2,
+      carregando: this.state.carregando,
+      comGoogle: this.props.comGoogle ?? true,
+      comProva: this.props.comProva ?? true,
+      forca1: f >= 1, forca2: f >= 2, forca3: f >= 3,
+      vazio1: f < 1, vazio2: f < 2, vazio3: f < 3,
+      forcaRotulo: f === 0 ? 'Muito curta' : f === 1 ? 'Fraca' : f === 2 ? 'Boa' : 'Forte',
+      nenhumServico: sel.length === 0,
+      rotuloPasso: this.state.step === 1 ? 'Passo 1 de 2' : 'Passo 2 de 2',
+      resumoServicos: sel.length ? sel.join(' · ') : 'Escolha ao menos um',
+      irEntrar: this.irPara('entrar'),
+      irCadastro: this.irPara('cadastro'),
+      irRecuperar: this.irPara('recuperar'),
+      irNovaSenha: this.irPara('nova-senha'),
+      entrar: this.entrar,
+      criarConta: this.criarConta,
+      enviarLink: this.enviarLink,
+      salvarSenha: this.salvarSenha,
+      alternarToken: this.alternarToken,
+      medirForca: this.medirForca,
+      proximoPasso: this.proximoPasso,
+      passoAnterior: this.passoAnterior
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,29 +1,27 @@
 import type { LeadSource } from "@/lib/types";
 
-// Fonte da verdade dos planos. Muda aqui e o resto do app (trava, UI, LP)
-// reflete. Preco em centavos de BRL pra evitar float na cobranca (Fase 3).
+// Fonte da verdade dos planos. Modelo de CRÉDITOS (fiel ao DS):
+// 1 crédito = 1 contato novo entregue. Contato que já saiu numa busca
+// anterior do usuário não é cobrado de novo (ver lib/usage.ts).
+// Volumes de crédito são placeholders do DS até o cliente confirmar.
 
 export type PlanId = "free" | "pro" | "business";
 
 export type PlanLimits = {
-  // Trava principal: quantas buscas por mes. E o que custa pra gente (Places API).
-  searchesPerMonth: number;
-  // Quantos resultados o servidor devolve por busca (corta a lista aqui).
-  resultsPerSearch: number;
-  // Teto de leads enriquecidos no mes. null = ilimitado.
-  enrichPerMonth: number | null;
+  // Créditos por mês. Reseta virando o mês.
+  creditsPerMonth: number;
   // Fontes liberadas.
   sources: LeadSource[];
-  // Pode exportar CSV?
+  // Pode exportar CSV/Excel?
   exportCsv: boolean;
-  // Dias de historico de busca guardado. 0 = sem historico.
+  // Dias de histórico de busca guardado. 0 = sem histórico.
   historyDays: number;
 };
 
 export type Plan = {
   id: PlanId;
   name: string;
-  // Preco mensal em centavos de BRL. 0 = gratis.
+  // Preço mensal em centavos de BRL. 0 = grátis.
   priceMonthlyCents: number;
   tagline: string;
   limits: PlanLimits;
@@ -36,9 +34,7 @@ export const PLANS: Record<PlanId, Plan> = {
     priceMonthlyCents: 0,
     tagline: "Pra experimentar e sentir o valor.",
     limits: {
-      searchesPerMonth: 5,
-      resultsPerSearch: 20,
-      enrichPerMonth: 10,
+      creditsPerMonth: 25,
       sources: ["places"],
       exportCsv: false,
       historyDays: 0,
@@ -50,9 +46,7 @@ export const PLANS: Record<PlanId, Plan> = {
     priceMonthlyCents: 6700,
     tagline: "Pro dia a dia de quem prospecta.",
     limits: {
-      searchesPerMonth: 100,
-      resultsPerSearch: 60,
-      enrichPerMonth: null,
+      creditsPerMonth: 2000,
       sources: ["places", "mercadolivre"],
       exportCsv: true,
       historyDays: 30,
@@ -62,24 +56,14 @@ export const PLANS: Record<PlanId, Plan> = {
     id: "business",
     name: "Business",
     priceMonthlyCents: 14700,
-    tagline: "Pra operacao de outbound em volume.",
+    tagline: "Pra operação de outbound em volume.",
     limits: {
-      searchesPerMonth: 400,
-      resultsPerSearch: 60,
-      enrichPerMonth: null,
+      creditsPerMonth: 10000,
       sources: ["places", "mercadolivre"],
       exportCsv: true,
       historyDays: 3650,
     },
   },
-};
-
-// Limite pro visitante anonimo experimentar no hero da LP (sem login).
-// Busca real, mas travada por IP/dia e com resultado parcial + blur.
-export const ANON_DEMO = {
-  searchesPerDay: 1,
-  resultsShown: 5,
-  sources: ["places"] as LeadSource[],
 };
 
 export const DEFAULT_PLAN: PlanId = "free";
@@ -96,4 +80,10 @@ export function priceLabel(cents: number): string {
 
 export function sourceAllowed(plan: Plan, source: LeadSource): boolean {
   return plan.limits.sources.includes(source);
+}
+
+export function nextPlan(id: PlanId): PlanId | null {
+  if (id === "free") return "pro";
+  if (id === "pro") return "business";
+  return null;
 }

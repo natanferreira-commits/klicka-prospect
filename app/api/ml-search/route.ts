@@ -9,7 +9,13 @@ import { readTokens, setTokens } from "@/lib/ml-tokens";
 import type { SearchResult } from "@/lib/types";
 import { getCurrentUser } from "@/lib/user";
 import { sourceAllowed } from "@/lib/plans";
-import { checkSearchLimit, recordSearch } from "@/lib/usage";
+import {
+  getUsage,
+  creditsRemaining,
+  chargeForContacts,
+  recordSearch,
+  upgradeFor,
+} from "@/lib/usage";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -57,11 +63,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 0.2) trava por busca
-    const limit = await checkSearchLimit(user);
-    if (!limit.ok) {
+    // 0.2) tem crédito?
+    const usage = await getUsage(user.id);
+    if (creditsRemaining(user, usage) <= 0) {
       return NextResponse.json(
-        { error: limit.reason, limitReached: true, upgrade: limit.upgrade },
+        {
+          error: `Seus ${user.plan.limits.creditsPerMonth} créditos do mês acabaram.`,
+          limitReached: true,
+          upgrade: upgradeFor(user),
+        },
         { status: 402 },
       );
     }
@@ -103,17 +113,18 @@ export async function POST(req: NextRequest) {
       throw e;
     }
 
-    const results = stores
-      .map(storeToResult)
-      .slice(0, user.plan.limits.resultsPerSearch);
+    const mapped = stores.map(storeToResult);
+    const charge = await chargeForContacts(user, mapped.map((r) => r.placeId), usage);
+    const delivered = new Set(charge.deliveredKeys);
+    const results = mapped.filter((r) => delivered.has(r.placeId));
 
-    // registra: conta na trava + grava no log
-    await recordSearch(user, "mercadolivre", { query: query.trim() });
+    await recordSearch(user, "mercadolivre", { query: query.trim(), charged: charge.charged });
 
     const res = NextResponse.json({
       results,
       totalFound: results.length,
       totalItems,
+      credits: { charged: charge.charged, reused: charge.reused, blocked: charge.blocked },
     });
     if (refreshed) setTokens(res, refreshed);
     return res;

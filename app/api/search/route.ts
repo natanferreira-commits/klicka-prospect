@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchPlaces } from "@/lib/places";
 import { getCurrentUser } from "@/lib/user";
-import { checkSearchLimit, recordSearch } from "@/lib/usage";
+import {
+  getUsage,
+  creditsRemaining,
+  chargeForContacts,
+  recordSearch,
+  upgradeFor,
+} from "@/lib/usage";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
   try {
-    // 1) precisa estar logado
     const user = await getCurrentUser();
     if (!user) {
       return NextResponse.json({ error: "faça login" }, { status: 401 });
@@ -19,11 +24,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "query is required" }, { status: 400 });
     }
 
-    // 2) trava por busca (protege a margem: cada busca custa na Places API)
-    const limit = await checkSearchLimit(user);
-    if (!limit.ok) {
+    // sem crédito nenhum? nem roda.
+    const usage = await getUsage(user.id);
+    if (creditsRemaining(user, usage) <= 0) {
       return NextResponse.json(
-        { error: limit.reason, limitReached: true, upgrade: limit.upgrade },
+        {
+          error: `Seus ${user.plan.limits.creditsPerMonth} créditos do mês acabaram.`,
+          limitReached: true,
+          upgrade: upgradeFor(user),
+        },
         { status: 402 },
       );
     }
@@ -38,13 +47,18 @@ export async function POST(req: NextRequest) {
 
     const { results, totalFound } = await searchPlaces(query.trim(), apiKey);
 
-    // 3) corta no limite de resultados do plano (Free 20, Pro/Business 60)
-    const capped = results.slice(0, user.plan.limits.resultsPerSearch);
+    // cobra por contato NOVO (repetido não cobra; corta no crédito restante)
+    const charge = await chargeForContacts(user, results.map((r) => r.placeId), usage);
+    const delivered = new Set(charge.deliveredKeys);
+    const capped = results.filter((r) => delivered.has(r.placeId));
 
-    // 4) registra: conta na trava + grava no log
-    await recordSearch(user, "places", { query: query.trim() });
+    await recordSearch(user, "places", { query: query.trim(), charged: charge.charged });
 
-    return NextResponse.json({ results: capped, totalFound });
+    return NextResponse.json({
+      results: capped,
+      totalFound,
+      credits: { charged: charge.charged, reused: charge.reused, blocked: charge.blocked },
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown error";
     return NextResponse.json({ error: msg }, { status: 500 });
