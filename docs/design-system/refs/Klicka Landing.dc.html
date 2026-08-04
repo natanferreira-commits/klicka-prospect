@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<style>
+html { scroll-behavior: smooth; }
+body { margin: 0; }
+a:hover { color: var(--color-accent-300); }
+@keyframes klPulse { 0%,100% { opacity: .3 } 50% { opacity: .7 } }
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:
+    radial-gradient(1100px 620px at 12% -10%, color-mix(in srgb, var(--color-accent) 13%, transparent), transparent 70%),
+    radial-gradient(900px 500px at 92% 4%, color-mix(in srgb, var(--color-section-glow) 30%, transparent), transparent 72%),
+    var(--color-bg);overflow-x:hidden">
+
+  <header style="position:sticky;top:0;z-index:40;backdrop-filter:blur(14px);background:color-mix(in srgb, var(--color-bg) 78%, transparent)">
+    <div style="max-width:1180px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;gap:32px">
+      <a href="#topo" style="display:flex;align-items:center;margin-right:auto"><img src="klicka-logo.png" alt="klicka." style="height:24px;width:auto"></a>
+      <nav style="display:flex;align-items:center;gap:26px;font-size:14px">
+        <a href="#como" style="color:var(--color-neutral-300);text-decoration:none">Como funciona</a>
+        <a href="#quem" style="color:var(--color-neutral-300);text-decoration:none">Para quem é</a>
+        <a href="#planos" style="color:var(--color-neutral-300);text-decoration:none">Planos</a>
+      </nav>
+      <div style="display:flex;align-items:center;gap:10px">
+        <a class="btn btn-ghost" href="#entrar">Entrar</a>
+        <a class="btn btn-primary" href="#planos">Criar conta</a>
+      </div>
+    </div>
+  </header>
+
+  <section id="topo" style="max-width:1180px;margin:0 auto;padding:88px 32px 24px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px">
+      <span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent)">Prospecção local</span>
+      <span style="width:56px;height:1px;background:var(--color-accent);opacity:.6"></span>
+      <span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-500)">dados do Google Maps</span>
+    </div>
+    <h1 style="font-size:clamp(40px,5.4vw,70px);line-height:1.02;letter-spacing:-.03em;max-width:15ch;margin:0 0 22px">Escolha o nicho. Escolha a cidade. Receba os contatos.</h1>
+    <p style="font-size:19px;line-height:1.5;max-width:52ch;color:var(--color-neutral-300);margin:0 0 40px">A klicka varre os negócios locais e devolve nome, telefone, site e reputação de cada um. Sem planilha manual, sem copiar e colar do Maps.</p>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+      <span style="width:7px;height:7px;border-radius:50%;background:var(--color-accent)"></span>
+      <span style="font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-400)">Demonstração ao vivo — busque agora</span>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:16px;border-radius:var(--radius-lg);background:color-mix(in srgb, var(--color-surface) 80%, transparent);box-shadow:var(--shadow-sm)">
+      <div class="field" style="flex:1 1 220px">
+        <label for="kl-nicho">Nicho</label>
+        <select class="input" id="kl-nicho" value="{{ niche }}" onChange="{{ onNiche }}" style="min-height:44px;font-size:15px;appearance:none;background-image:none">
+          <option>Odontologia</option>
+          <option>Academias</option>
+          <option>Restaurantes</option>
+          <option>Pet shops</option>
+          <option>Advocacia</option>
+          <option>Estética e beleza</option>
+          <option>Oficinas mecânicas</option>
+        </select>
+      </div>
+      <div class="field" style="flex:1 1 260px">
+        <label for="kl-regiao">Região</label>
+        <input class="input" id="kl-regiao" placeholder="Cidade, estado" value="{{ region }}" onChange="{{ onRegion }}" onKeyDown="{{ onKey }}" style="min-height:44px;font-size:15px">
+      </div>
+      <button class="btn btn-primary" onClick="{{ onSearch }}" style="min-height:44px;padding-inline:22px;font-size:15px;flex:0 0 auto">
+        <i class="ph ph-magnifying-glass" style="font-size:17px"></i>
+        Buscar contatos
+      </button>
+    </div>
+  </section>
+
+  <section style="max-width:1180px;margin:0 auto;padding:26px 32px 100px">
+    <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:0 4px 14px">
+      <span style="font-family:var(--font-heading);font-size:17px">{{ resultTitle }}</span>
+      <span class="text-muted" style="font-size:13px">{{ resultMeta }}</span>
+      <span style="margin-left:auto;display:flex;gap:6px">
+        <span class="tag tag-neutral">CSV</span>
+        <span class="tag tag-neutral">Excel</span>
+        <span class="tag tag-outline">Enviar pro CRM</span>
+      </span>
+    </div>
+
+    <div style="border-radius:var(--radius-lg);background:var(--color-surface);box-shadow:var(--shadow-md);overflow:hidden">
+      <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:20px 8px">
+          <sc-for list="{{ skeleton }}" as="s" hint-placeholder-count="5">
+            <div style="display:flex;gap:16px;padding:13px 12px;animation:klPulse 1.1s ease-in-out infinite">
+              <span style="height:11px;border-radius:3px;background:var(--color-neutral-700);flex:2.4"></span>
+              <span style="height:11px;border-radius:3px;background:var(--color-neutral-700);flex:1.1"></span>
+              <span style="height:11px;border-radius:3px;background:var(--color-neutral-700);flex:1.5"></span>
+              <span style="height:11px;border-radius:3px;background:var(--color-neutral-700);flex:.6"></span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isDone }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <table class="table" style="font-size:14px">
+            <thead>
+              <tr>
+                <th style="padding-left:20px">Empresa</th>
+                <th>Telefone</th>
+                <th>Site</th>
+                <th style="text-align:right">Nota</th>
+                <th style="text-align:right;padding-right:20px">Avaliações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{ rows }}" as="r" hint-placeholder-count="4">
+                <tr>
+                  <td style="padding:12px 8px 12px 20px">
+                    <div style="font-family:var(--font-heading)">{{ r.name }}</div>
+                    <div class="text-muted" style="font-size:11px;margin-top:2px">{{ r.address }}</div>
+                  </td>
+                  <td style="padding:12px 8px;font-variant-numeric:tabular-nums;white-space:nowrap">{{ r.phone }}</td>
+                  <td style="padding:12px 8px">
+                    <sc-if value="{{ r.site }}" hint-placeholder-val="{{ true }}">
+                      <span style="color:var(--color-neutral-300)">{{ r.site }}</span>
+                    </sc-if>
+                    <sc-if value="{{ r.noSite }}" hint-placeholder-val="{{ false }}">
+                      <span class="tag tag-accent">sem site</span>
+                    </sc-if>
+                  </td>
+                  <td style="padding:12px 8px;text-align:right;font-variant-numeric:tabular-nums">{{ r.rating }}</td>
+                  <td style="padding:12px 20px 12px 8px;text-align:right;font-variant-numeric:tabular-nums" class="text-muted">{{ r.reviews }}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+
+          <div style="position:relative">
+            <table class="table" style="font-size:14px;filter:blur(4px);opacity:.5;pointer-events:none;user-select:none">
+              <tbody>
+                <sc-for list="{{ locked }}" as="r" hint-placeholder-count="3">
+                  <tr>
+                    <td style="padding:12px 8px 12px 20px">
+                      <div style="font-family:var(--font-heading)">{{ r.name }}</div>
+                      <div class="text-muted" style="font-size:11px;margin-top:2px">{{ r.address }}</div>
+                    </td>
+                    <td style="padding:12px 8px">{{ r.phone }}</td>
+                    <td style="padding:12px 8px" class="text-muted">{{ r.site }}</td>
+                    <td style="padding:12px 8px;text-align:right">{{ r.rating }}</td>
+                    <td style="padding:12px 20px 12px 8px;text-align:right" class="text-muted">{{ r.reviews }}</td>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:linear-gradient(to bottom, color-mix(in srgb, var(--color-surface) 30%, transparent), var(--color-surface) 80%)">
+              <span style="font-size:14px;color:var(--color-neutral-300)">{{ lockedLabel }}</span>
+              <a class="btn btn-primary" href="#planos"><i class="ph ph-lock-simple-open" style="font-size:16px"></i> Liberar a lista completa</a>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </section>
+
+  <section id="como" style="max-width:1180px;margin:0 auto;padding:0 32px 110px">
+    <h2 style="font-size:clamp(28px,3.2vw,42px);letter-spacing:-.025em;max-width:20ch;margin:0 0 56px">Três passos entre uma ideia de nicho e a primeira abordagem.</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:48px">
+      <div>
+        <div style="font-family:var(--font-heading);font-size:13px;color:var(--color-accent);margin-bottom:14px">01</div>
+        <div style="width:100%;height:1px;background:linear-gradient(to right, var(--color-accent), transparent);margin-bottom:20px"></div>
+        <h4 style="margin:0 0 10px">Descreva o alvo</h4>
+        <p class="text-muted" style="font-size:14px;margin:0">Nicho e região. "Pet shop em Curitiba", "clínica de estética na zona sul de SP". Sem filtro complicado.</p>
+      </div>
+      <div>
+        <div style="font-family:var(--font-heading);font-size:13px;color:var(--color-accent);margin-bottom:14px">02</div>
+        <div style="width:100%;height:1px;background:linear-gradient(to right, var(--color-accent), transparent);margin-bottom:20px"></div>
+        <h4 style="margin:0 0 10px">A klicka varre o mapa</h4>
+        <p class="text-muted" style="font-size:14px;margin:0">Em segundos a busca cobre a região inteira e volta com os dados públicos de cada negócio — já limpos e sem duplicata.</p>
+      </div>
+      <div>
+        <div style="font-family:var(--font-heading);font-size:13px;color:var(--color-accent);margin-bottom:14px">03</div>
+        <div style="width:100%;height:1px;background:linear-gradient(to right, var(--color-accent), transparent);margin-bottom:20px"></div>
+        <h4 style="margin:0 0 10px">Exporte e aborde</h4>
+        <p class="text-muted" style="font-size:14px;margin:0">CSV, Excel ou direto pro seu CRM. Filtre quem não tem site e comece pela lista mais quente.</p>
+      </div>
+    </div>
+  </section>
+
+  <sc-if value="{{ showStatBand }}" hint-placeholder-val="{{ true }}">
+    <section style="background:linear-gradient(120deg, var(--color-section), var(--color-section-glow));padding:72px 0;margin-bottom:110px">
+      <div style="max-width:1180px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:40px">
+        <div>
+          <div style="font-family:var(--font-heading);font-size:clamp(34px,4vw,52px);letter-spacing:-.03em;line-height:1">2,4 mi</div>
+          <div style="font-size:13px;color:var(--color-accent-200);margin-top:8px">negócios já mapeados</div>
+        </div>
+        <div>
+          <div style="font-family:var(--font-heading);font-size:clamp(34px,4vw,52px);letter-spacing:-.03em;line-height:1">5.570</div>
+          <div style="font-size:13px;color:var(--color-accent-200);margin-top:8px">cidades cobertas</div>
+        </div>
+        <div>
+          <div style="font-family:var(--font-heading);font-size:clamp(34px,4vw,52px);letter-spacing:-.03em;line-height:1">38 s</div>
+          <div style="font-size:13px;color:var(--color-accent-200);margin-top:8px">média por busca</div>
+        </div>
+        <div>
+          <div style="font-family:var(--font-heading);font-size:clamp(34px,4vw,52px);letter-spacing:-.03em;line-height:1">1 clique</div>
+          <div style="font-size:13px;color:var(--color-accent-200);margin-top:8px">da busca ao CSV</div>
+        </div>
+      </div>
+    </section>
+  </sc-if>
+
+  <section id="quem" style="max-width:1180px;margin:0 auto;padding:0 32px 110px">
+    <div style="max-width:44ch;margin-bottom:52px">
+      <span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent)">Para quem é</span>
+      <h2 style="font-size:clamp(28px,3.2vw,42px);letter-spacing:-.025em;margin:16px 0 0">Feita para quem vende serviço para empresa.</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
+      <div class="card elev-sm">
+        <i class="ph ph-monitor" style="font-size:22px;color:var(--color-accent)"></i>
+        <div class="card-title">Designers e web</div>
+        <p class="card-body">Filtre negócios <em>sem site</em> na sua cidade — cada linha da lista é um orçamento em potencial.</p>
+      </div>
+      <div class="card elev-sm">
+        <i class="ph ph-target" style="font-size:22px;color:var(--color-accent)"></i>
+        <div class="card-title">Gestores de tráfego</div>
+        <p class="card-body">Encontre quem já anuncia mal ou não anuncia, com nota e volume de avaliação como sinal de porte.</p>
+      </div>
+      <div class="card elev-sm">
+        <i class="ph ph-instagram-logo" style="font-size:22px;color:var(--color-accent)"></i>
+        <div class="card-title">Social media</div>
+        <p class="card-body">Monte carteira por nicho e bairro, em vez de garimpar perfil por perfil no feed.</p>
+      </div>
+      <div class="card elev-sm">
+        <i class="ph ph-users-three" style="font-size:22px;color:var(--color-accent)"></i>
+        <div class="card-title">Agências e times</div>
+        <p class="card-body">Divida listas entre SDRs, exporte pro CRM e acompanhe qual nicho responde melhor.</p>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width:1180px;margin:0 auto;padding:0 32px 110px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:56px;align-items:start">
+      <div>
+        <span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent)">O que vem em cada contato</span>
+        <h2 style="font-size:clamp(26px,2.8vw,36px);letter-spacing:-.025em;margin:16px 0 14px">Dado limpo, pronto pra abordagem.</h2>
+        <p class="text-muted" style="font-size:15px;max-width:44ch;margin:0">Tudo o que é público sobre o negócio, normalizado no mesmo formato e sem duplicata entre buscas.</p>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <span class="tag tag-neutral" style="font-size:13px;padding:7px 14px">Nome do negócio</span>
+        <span class="tag tag-neutral" style="font-size:13px;padding:7px 14px">Telefone</span>
+        <span class="tag tag-neutral" style="font-size:13px;padding:7px 14px">WhatsApp</span>
+        <span class="tag tag-neutral" style="font-size:13px;padding:7px 14px">Site</span>
+        <span class="tag tag-neutral" style="font-size:13px;padding:7px 14px">Endereço completo</span>
+        <span class="tag tag-neutral" style="font-size:13px;padding:7px 14px">Bairro</span>
+        <span class="tag tag-neutral" style="font-size:13px;padding:7px 14px">Categoria</span>
+        <span class="tag tag-neutral" style="font-size:13px;padding:7px 14px">Nota média</span>
+        <span class="tag tag-neutral" style="font-size:13px;padding:7px 14px">Nº de avaliações</span>
+        <span class="tag tag-neutral" style="font-size:13px;padding:7px 14px">Horário de funcionamento</span>
+        <span class="tag tag-outline" style="font-size:13px;padding:7px 14px">Link do perfil no Maps</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="planos" style="max-width:1180px;margin:0 auto;padding:0 32px 110px">
+    <div style="max-width:40ch;margin-bottom:52px">
+      <span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent)">Planos</span>
+      <h2 style="font-size:clamp(28px,3.2vw,42px);letter-spacing:-.025em;margin:16px 0 0">Você paga por contato entregue, não por assento.</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;align-items:stretch">
+      <div class="card elev-sm" style="padding:24px;gap:6px">
+        <div class="card-kicker">Teste</div>
+        <div style="font-family:var(--font-heading);font-size:34px;letter-spacing:-.02em;margin:8px 0 2px">Grátis</div>
+        <div class="text-muted" style="font-size:13px;margin-bottom:18px">25 contatos por mês</div>
+        <div style="display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--color-neutral-300);flex:1">
+          <span>Busca por nicho e cidade</span>
+          <span>Exportação em CSV</span>
+          <span>1 usuário</span>
+        </div>
+        <a class="btn btn-secondary btn-block" href="#entrar">Começar de graça</a>
+      </div>
+      <div class="card elev-md" style="padding:24px;gap:6px;box-shadow:0 0 0 1px var(--color-accent), 0 16px 40px rgba(0,0,0,.5)">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="card-kicker">Pro</div>
+          <span class="tag tag-accent">mais assinado</span>
+        </div>
+        <div style="font-family:var(--font-heading);font-size:34px;letter-spacing:-.02em;margin:8px 0 2px">R$ 97<span style="font-size:15px;color:var(--color-neutral-400)">/mês</span></div>
+        <div class="text-muted" style="font-size:13px;margin-bottom:18px">2.000 contatos por mês</div>
+        <div style="display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--color-neutral-300);flex:1">
+          <span>Filtro "sem site" e por nota</span>
+          <span>Excel, CSV e histórico de buscas</span>
+          <span>Deduplicação entre listas</span>
+          <span>3 usuários</span>
+        </div>
+        <a class="btn btn-primary btn-block" href="#entrar">Assinar o Pro</a>
+      </div>
+      <div class="card elev-sm" style="padding:24px;gap:6px">
+        <div class="card-kicker">Agência</div>
+        <div style="font-family:var(--font-heading);font-size:34px;letter-spacing:-.02em;margin:8px 0 2px">R$ 297<span style="font-size:15px;color:var(--color-neutral-400)">/mês</span></div>
+        <div class="text-muted" style="font-size:13px;margin-bottom:18px">10.000 contatos por mês</div>
+        <div style="display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--color-neutral-300);flex:1">
+          <span>Tudo do Pro</span>
+          <span>Integração com CRM e webhook</span>
+          <span>Acesso à API</span>
+          <span>Usuários ilimitados</span>
+        </div>
+        <a class="btn btn-secondary btn-block" href="#entrar">Falar com a gente</a>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width:1180px;margin:0 auto;padding:0 32px 110px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:56px;align-items:start">
+      <h2 style="font-size:clamp(26px,2.8vw,36px);letter-spacing:-.025em;margin:0;max-width:16ch">Perguntas que todo mundo faz</h2>
+      <div style="display:flex;flex-direction:column">
+        <details style="padding:18px 0;border-bottom:1px solid var(--color-divider)">
+          <summary style="display:flex;align-items:center;gap:12px;cursor:pointer;font-family:var(--font-heading);font-size:16px">
+            <i class="ph ph-plus" style="font-size:14px;color:var(--color-accent)"></i>De onde vêm os dados?
+          </summary>
+          <p class="text-muted" style="font-size:14px;margin:12px 0 0;padding-left:26px">Da API oficial do Google Maps. São informações que o próprio negócio publicou no perfil dele — nada de dado privado.</p>
+        </details>
+        <details style="padding:18px 0;border-bottom:1px solid var(--color-divider)">
+          <summary style="display:flex;align-items:center;gap:12px;cursor:pointer;font-family:var(--font-heading);font-size:16px">
+            <i class="ph ph-plus" style="font-size:14px;color:var(--color-accent)"></i>Os contatos vêm com e-mail?
+          </summary>
+          <p class="text-muted" style="font-size:14px;margin:12px 0 0;padding-left:26px">Telefone e WhatsApp sempre que o perfil tiver. E-mail aparece quando o negócio publica no site — não inventamos endereço.</p>
+        </details>
+        <details style="padding:18px 0;border-bottom:1px solid var(--color-divider)">
+          <summary style="display:flex;align-items:center;gap:12px;cursor:pointer;font-family:var(--font-heading);font-size:16px">
+            <i class="ph ph-plus" style="font-size:14px;color:var(--color-accent)"></i>Vou receber o mesmo contato duas vezes?
+          </summary>
+          <p class="text-muted" style="font-size:14px;margin:12px 0 0;padding-left:26px">Não. A klicka guarda o histórico da sua conta e marca o que já saiu em busca anterior, então cada crédito vira contato novo.</p>
+        </details>
+        <details style="padding:18px 0;border-bottom:1px solid var(--color-divider)">
+          <summary style="display:flex;align-items:center;gap:12px;cursor:pointer;font-family:var(--font-heading);font-size:16px">
+            <i class="ph ph-plus" style="font-size:14px;color:var(--color-accent)"></i>Posso cancelar quando quiser?
+          </summary>
+          <p class="text-muted" style="font-size:14px;margin:12px 0 0;padding-left:26px">Quando quiser, pelo painel, sem falar com ninguém. Os contatos já exportados continuam seus.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section style="max-width:1180px;margin:0 auto;padding:0 32px 110px">
+    <div style="border-radius:var(--radius-lg);background:linear-gradient(120deg, var(--color-accent-900), var(--color-surface));box-shadow:var(--shadow-sm);padding:64px 48px">
+      <h2 style="font-size:clamp(28px,3.4vw,46px);letter-spacing:-.03em;max-width:22ch;margin:0 0 18px">Sua próxima lista de clientes já existe. Só falta você buscar.</h2>
+      <p style="font-size:16px;color:var(--color-neutral-300);max-width:46ch;margin:0 0 32px">25 contatos grátis para testar. Sem cartão, sem chamada de vendas.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <a class="btn btn-primary" href="#entrar" style="min-height:44px;padding-inline:24px;font-size:15px">Criar conta grátis</a>
+        <a class="btn btn-secondary" href="#topo" style="min-height:44px;padding-inline:24px;font-size:15px">Testar uma busca</a>
+      </div>
+    </div>
+  </section>
+
+  <footer style="max-width:1180px;margin:0 auto;padding:0 32px 64px">
+    <div style="height:1px;background:linear-gradient(to right, transparent, var(--color-divider) 48px, var(--color-divider) calc(100% - 48px), transparent);margin-bottom:32px"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:32px;align-items:center">
+      <img src="klicka-logo.png" alt="klicka." style="height:20px;width:auto;opacity:.85">
+      <div style="display:flex;flex-wrap:wrap;gap:22px;font-size:13px;margin-left:auto">
+        <a href="#planos" style="color:var(--color-neutral-400);text-decoration:none">Planos</a>
+        <a href="#como" style="color:var(--color-neutral-400);text-decoration:none">Como funciona</a>
+        <a href="#termos" style="color:var(--color-neutral-400);text-decoration:none">Termos</a>
+        <a href="#privacidade" style="color:var(--color-neutral-400);text-decoration:none">Privacidade</a>
+      </div>
+      <span class="text-muted" style="font-size:12px;width:100%">© 2026 klicka. Dados públicos via API do Google Maps.</span>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;demoNiche&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Odontologia&quot;,&quot;Academias&quot;,&quot;Restaurantes&quot;,&quot;Pet shops&quot;,&quot;Advocacia&quot;,&quot;Estética e beleza&quot;,&quot;Oficinas mecânicas&quot;],&quot;default&quot;:&quot;Odontologia&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo da hero&quot;},&quot;freeRows&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:4,&quot;min&quot;:1,&quot;max&quot;:8,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Demo da hero&quot;},&quot;showStatBand&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Seções&quot;}}">
+const NICHES = {
+  'Odontologia': { cat: 'Clínica odontológica', names: ['Sorriso Real Odontologia','OdontoCenter Vila Nova','Clínica Bellini','Instituto Prime Odonto','Dental Alvorada','Ortoville','Espaço Dente & Cia','Clínica Vita Oral','OdontoLife','Sorridents Bairro Alto'] },
+  'Academias': { cat: 'Academia', names: ['Fit Nova Era','Academia Corpo Livre','Studio Pulse','Bodytech Bairro','Arena Fitness','CrossBox 27','Academia Movimento','Smart Fit Centro','Studio Ritmo','Iron House'] },
+  'Restaurantes': { cat: 'Restaurante', names: ['Cantina do Porto','Sabor da Serra','Restaurante Dona Alzira','Casa Fogo','Bistrô Nove','Mercado Grill','Tempero Novo','Villa Pasta','Comedoria Central','Peixaria do Zé'] },
+  'Pet shops': { cat: 'Pet shop', names: ['Pet Amigo','Mundo Cão','Clínica Vet Patinhas','Pet Shop Estrela','Casa dos Bichos','AuMiau Center','Vet & Pet Jardim','Banho e Tosa Lili','PetCare Norte','Reino Animal'] },
+  'Advocacia': { cat: 'Escritório de advocacia','names': ['Almeida & Associados','Escritório Vieira Lima','Barros Advocacia','Nunes Sociedade de Advogados','Costa & Prado','Advocacia Meridiano','Ferraz Advogados','Lima Rocha Direito','Escritório Aurora','Tavares Consultoria Jurídica'] },
+  'Estética e beleza': { cat: 'Clínica de estética', names: ['Espaço Belle','Clínica Lumina','Studio Glow','Estética Nova Pele','Bella Forma','Salão Atelier 12','Clínica Renove','Studio Marés','Beleza Pura','Instituto Aura'] },
+  'Oficinas mecânicas': { cat: 'Oficina mecânica', names: ['Auto Center Rodas','Oficina do Tião','Mecânica Precisa','Turbo Motors','Auto Elétrica Central','Garagem 44','Oficina Bom Freio','Multi Auto Serviços','Mecânica São Jorge','Car Point'] }
+};
+
+const DDD = { 'são paulo': '11', 'campinas': '19', 'rio de janeiro': '21', 'belo horizonte': '31', 'curitiba': '41', 'porto alegre': '51', 'florianópolis': '48', 'salvador': '71', 'recife': '81', 'fortaleza': '85', 'brasília': '61', 'goiânia': '62', 'manaus': '92', 'belém': '91' };
+const BAIRROS_POR_CIDADE = {
+  'são paulo': ['Centro','Vila Mariana','Bela Vista','Jardim América','Santa Cecília','Pinheiros'],
+  'campinas': ['Centro','Cambuí','Taquaral','Barão Geraldo','Jardim Guanabara'],
+  'rio de janeiro': ['Centro','Tijuca','Botafogo','Copacabana','Barra da Tijuca'],
+  'belo horizonte': ['Centro','Savassi','Funcionários','Pampulha','Buritis'],
+  'curitiba': ['Centro','Batel','Água Verde','Bairro Alto','Alto da Glória','Portão'],
+  'porto alegre': ['Centro Histórico','Moinhos de Vento','Cidade Baixa','Petrópolis','Menino Deus'],
+  'florianópolis': ['Centro','Trindade','Campeche','Lagoa da Conceição','Estreito'],
+  'salvador': ['Barra','Pituba','Rio Vermelho','Itaigara','Ondina'],
+  'recife': ['Boa Viagem','Espinheiro','Graças','Pina','Santo Amaro'],
+  'fortaleza': ['Aldeota','Meireles','Centro','Cocó','Benfica'],
+  'brasília': ['Asa Norte','Asa Sul','Águas Claras','Sudoeste','Lago Norte'],
+  'goiânia': ['Setor Oeste','Setor Bueno','Setor Marista','Centro','Jardim Goiás'],
+  'manaus': ['Centro','Adrianópolis','Ponta Negra','Cidade Nova','Parque 10'],
+  'belém': ['Nazaré','Batista Campos','Umarizal','Cidade Velha','Marco']
+};
+const BAIRROS_PADRAO = ['Centro','Zona Norte','Zona Sul','Zona Leste','Zona Oeste'];
+
+function hash(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function slug(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '').slice(0, 16);
+}
+
+const SKELETON = [1, 2, 3, 4, 5];
+
+function cityKey(region) {
+  return region.toLowerCase().split(',')[0].trim();
+}
+function dddFor(region) {
+  const r = cityKey(region);
+  for (const k in DDD) if (r.indexOf(k) > -1) return DDD[k];
+  return '11';
+}
+function bairrosFor(region) {
+  const r = cityKey(region);
+  for (const k in BAIRROS_POR_CIDADE) if (r.indexOf(k) > -1) return BAIRROS_POR_CIDADE[k];
+  return BAIRROS_PADRAO;
+}
+
+function buildLeads(niche, region) {
+  const set = NICHES[niche] || NICHES['Odontologia'];
+  const ddd = dddFor(region);
+  const bairros = bairrosFor(region);
+  const city = region.split(',')[0].trim() || 'São Paulo';
+  return set.names.map(name => {
+    const h = hash(name + city);
+    const hasSite = (h % 100) > 34;
+    const r = 3.6 + ((h >>> 3) % 15) / 10;
+    return {
+      name,
+      address: bairros[(h >>> 7) % bairros.length] + ', ' + city,
+      phone: '(' + ddd + ') 3' + (100 + (h % 900)) + '-' + (1000 + ((h >>> 5) % 9000)),
+      site: hasSite ? slug(name) + '.com.br' : '',
+      noSite: !hasSite,
+      rating: (r > 5 ? 5 : r).toFixed(1),
+      reviews: 12 + ((h >>> 11) % 780)
+    };
+  });
+}
+
+class Component extends DCLogic {
+  state = { niche: null, region: null, status: 'done' };
+
+  search = () => {
+    clearTimeout(this._t);
+    this.setState({ status: 'loading' });
+    this._t = setTimeout(() => this.setState({ status: 'done' }), 950);
+  };
+
+  onNiche = e => { this.setState({ niche: e.target.value }); this.search(); };
+  onRegion = e => this.setState({ region: e.target.value });
+  onKey = e => { if (e.key === 'Enter') this.search(); };
+
+  componentWillUnmount() { clearTimeout(this._t); }
+
+  /* Cached by niche|region|freeRows so every render returns the SAME array and
+     row identities — otherwise change detection sees new objects forever. */
+  view() {
+    const niche = this.state.niche ?? this.props.demoNiche ?? 'Odontologia';
+    const region = this.state.region ?? 'Curitiba, PR';
+    const free = Math.max(1, Math.min(8, this.props.freeRows ?? 4));
+    const key = niche + '|' + region + '|' + free;
+    if (this._key === key) return this._view;
+    const all = buildLeads(niche, region);
+    const total = 40 + (hash(niche + region) % 260);
+    this._key = key;
+    this._view = {
+      niche,
+      region,
+      rows: all.slice(0, free),
+      locked: all.slice(free, free + 3),
+      lockedLabel: '+' + (total - free) + ' contatos nesta busca',
+      resultTitle: niche + ' em ' + region,
+      resultMeta: total + ' negócios encontrados · ' + all.filter(r => r.noSite).length + ' sem site'
+    };
+    return this._view;
+  }
+
+  renderVals() {
+    const v = this.view();
+    return {
+      niche: v.niche,
+      region: v.region,
+      rows: v.rows,
+      locked: v.locked,
+      lockedLabel: v.lockedLabel,
+      resultTitle: v.resultTitle,
+      resultMeta: v.resultMeta,
+      isLoading: this.state.status === 'loading',
+      isDone: this.state.status === 'done',
+      skeleton: SKELETON,
+      showStatBand: this.props.showStatBand ?? true,
+      onNiche: this.onNiche,
+      onRegion: this.onRegion,
+      onKey: this.onKey,
+      onSearch: this.search
+    };
+  }
+}
+
+</script>
+</body>
+</html>

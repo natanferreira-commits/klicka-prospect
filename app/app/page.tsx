@@ -373,9 +373,8 @@ export default function Home() {
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex-1 flex flex-col">
       <header className="border-b border-neutral-800 bg-neutral-950/95 backdrop-blur sticky top-0 z-10">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
-          <h1 className="text-lg font-semibold tracking-tight text-neutral-50">
-            Klicka<span className="text-purple-400">Leads</span>
-          </h1>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/klicka-logo.png" alt="klicka." style={{ height: 20, width: "auto" }} />
           <div className="flex items-center gap-4">
             {plan && usage && (
               <span

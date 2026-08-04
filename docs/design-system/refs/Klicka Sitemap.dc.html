@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<style>
+body { margin: 0; }
+a:hover { color: var(--color-accent-300); }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--color-bg);padding:64px 56px 120px">
+  <div style="max-width:1000px">
+    <img src="klicka-logo.png" alt="klicka." style="height:18px;width:auto;margin-bottom:34px">
+    <span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent)">Arquitetura de informação</span>
+    <h1 style="font-size:48px;letter-spacing:-.03em;margin:14px 0 16px">Todas as telas do produto.</h1>
+    <p style="font-size:17px;color:var(--color-neutral-300);max-width:56ch;margin:0 0 12px">O mapa completo, do público ao admin, com a rota de cada tela e em que fase ela precisa existir. O que não é rota — modal, drawer, aba, estado de carregamento, edição em linha — aparece aninhado na tela que o abre.</p>
+    <p class="text-muted" style="font-size:14px;margin:0 0 56px">{{ resumo }}</p>
+
+    <sc-for list="{{ areas }}" as="a" hint-placeholder-count="5">
+      <section style="margin-bottom:72px">
+        <div style="display:flex;align-items:baseline;gap:14px;margin-bottom:8px">
+          <h2 style="font-size:28px;letter-spacing:-.02em;margin:0">{{ a.nome }}</h2>
+          <span class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace">{{ a.contagem }}</span>
+        </div>
+        <p class="text-muted" style="font-size:14px;max-width:60ch;margin:0 0 22px">{{ a.desc }}</p>
+
+        <div style="border-left:1px solid var(--color-divider);padding-left:0">
+          <sc-for list="{{ a.itens }}" as="s" hint-placeholder-count="5">
+            <div style="padding-left:22px;position:relative;padding-top:14px;padding-bottom:14px">
+              <span style="position:absolute;left:0;top:26px;width:12px;height:1px;background:var(--color-divider)"></span>
+              <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap">
+                <span style="font-family:var(--font-heading);font-size:16px">{{ s.nome }}</span>
+                <span style="font-size:12px;font-family:ui-monospace,monospace;color:var(--color-accent-300)">{{ s.rota }}</span>
+                <span class="text-muted" style="margin-left:auto;font-size:10px;font-family:ui-monospace,monospace;letter-spacing:.06em">{{ s.fase }}</span>
+              </div>
+              <sc-if value="{{ s.obsVisivel }}" hint-placeholder-val="{{ true }}">
+                <p class="text-muted" style="font-size:13px;max-width:64ch;margin:6px 0 0">{{ s.obs }}</p>
+              </sc-if>
+              <sc-for list="{{ s.filhos }}" as="f" hint-placeholder-count="2">
+                <div style="margin:12px 0 0 4px;padding-left:20px;border-left:1px solid var(--color-neutral-800);position:relative">
+                  <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+                    <i class="ph ph-arrow-elbow-down-right" style="font-size:13px;color:var(--color-neutral-600)"></i>
+                    <span style="font-size:14px;color:var(--color-neutral-300)">{{ f.nome }}</span>
+                    <span style="font-size:11px;font-family:ui-monospace,monospace;color:var(--color-neutral-500)">{{ f.rota }}</span>
+                    <span class="text-muted" style="margin-left:auto;font-size:10px;font-family:ui-monospace,monospace;letter-spacing:.06em">{{ f.fase }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+
+    <section style="margin-bottom:64px">
+      <h2 style="font-size:28px;letter-spacing:-.02em;margin:0 0 8px">Estados transversais</h2>
+      <p class="text-muted" style="font-size:14px;max-width:60ch;margin:0 0 18px">Não são rotas. Toda tela que mostra dado precisa destes cinco desenhados — sem eles a tela não está pronta.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px">
+        <span class="tag tag-neutral" style="font-size:13px;padding:7px 14px">Carregando</span>
+        <span class="tag tag-neutral" style="font-size:13px;padding:7px 14px">Vazio de primeira vez</span>
+        <span class="tag tag-neutral" style="font-size:13px;padding:7px 14px">Vazio por filtro</span>
+        <span class="tag tag-neutral" style="font-size:13px;padding:7px 14px">Erro da busca</span>
+        <span class="tag tag-accent" style="font-size:13px;padding:7px 14px">Sem créditos</span>
+      </div>
+      <p class="text-muted" style="font-size:14px;max-width:60ch;margin:0 0 18px">E dois que são do app inteiro, desenhados uma vez e reusados:</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <span class="tag tag-outline" style="font-size:13px;padding:7px 14px">Sessão expirada</span>
+        <span class="tag tag-outline" style="font-size:13px;padding:7px 14px">404</span>
+      </div>
+    </section>
+
+    <section>
+      <h2 style="font-size:28px;letter-spacing:-.02em;margin:0 0 8px">Navegação do app</h2>
+      <p class="text-muted" style="font-size:14px;max-width:60ch;margin:0 0 22px">A sidebar carrega só quatro destinos. Tudo que não é destino frequente vive dentro de Conta ou como ação na própria tela — é o que mantém o produto espaçado em vez de virar um painel de controle.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:40px">
+        <div>
+          <h5 style="color:var(--color-accent);margin:0 0 14px">Na sidebar</h5>
+          <div style="display:flex;flex-direction:column;gap:11px;font-size:14px;color:var(--color-neutral-300)">
+            <span>Nova busca</span>
+            <span>Minhas listas</span>
+            <span>Histórico</span>
+            <span>Conta — com o medidor de crédito no pé</span>
+          </div>
+        </div>
+        <div>
+          <h5 style="color:var(--color-neutral-400);margin:0 0 14px">Fora da sidebar, de propósito</h5>
+          <div style="display:flex;flex-direction:column;gap:11px;font-size:14px;color:var(--color-neutral-300)">
+            <span>Exportações — fica na tela de resultado, onde nasce</span>
+            <span>Plano e faturas — dentro de Conta</span>
+            <span>Equipe — dentro de Conta</span>
+            <span>Ajuda — link discreto no pé da sidebar</span>
+            <span>Detalhe do lead — drawer, nunca página</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;escopo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;MVP&quot;,&quot;MVP + v1&quot;,&quot;Tudo&quot;],&quot;default&quot;:&quot;Tudo&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Escopo&quot;},&quot;mostrarObs&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Escopo&quot;}}">
+const AREAS = [
+  {
+    nome: 'Público', desc: 'O que o Google indexa e o que converte. A landing programática por nicho e cidade é o maior canal de aquisição de um produto assim — cada combinação vira uma página.',
+    itens: [
+      { nome: 'Landing', rota: '/', fase: 'MVP', obs: 'Hero com a busca de verdade rodando. Já existe.' },
+      { nome: 'Landing por nicho e cidade', rota: '/leads/:nicho/:cidade', fase: 'v1', obs: 'Gerada em massa: "leads de pet shop em Curitiba". Mostra 3 contatos reais e trava o resto — mesmo padrão da hero.', filhos: [
+        { nome: 'Índice de nichos', rota: '/leads/:nicho', fase: 'v1' },
+        { nome: 'Índice de cidades', rota: '/cidades', fase: 'v2' }
+      ] },
+      { nome: 'Planos', rota: '/planos', fase: 'MVP', obs: 'Hoje é seção da landing. Vira página própria quando existir comparativo e FAQ de cobrança.' },
+      { nome: 'Ajuda e documentação', rota: '/ajuda', fase: 'v1' },
+      { nome: 'Termos de uso', rota: '/termos', fase: 'MVP', obs: 'Obrigatório: o produto trata dado de terceiro.' },
+      { nome: 'Privacidade e LGPD', rota: '/privacidade', fase: 'MVP', obs: 'Precisa dizer de onde vem o dado e como o titular pede remoção.' }
+    ]
+  },
+  {
+    nome: 'Acesso', desc: 'Curto de propósito. Cada campo extra aqui custa conversão — e o produto já prova valor antes do cadastro, na hero.',
+    itens: [
+      { nome: 'Criar conta', rota: '/cadastro', fase: 'MVP', obs: 'E-mail e senha, ou Google. Nada de telefone e cargo no primeiro passo.' },
+      { nome: 'Entrar', rota: '/entrar', fase: 'MVP' },
+      { nome: 'Esqueci a senha', rota: '/recuperar', fase: 'MVP', filhos: [
+        { nome: 'Definir nova senha', rota: '/recuperar/:token', fase: 'MVP' }
+      ] },
+      { nome: 'Confirmar e-mail', rota: '/confirmar/:token', fase: 'MVP' },
+      { nome: 'Onboarding', rota: '/inicio', fase: 'v1', obs: 'Dois passos: que serviço você vende, em que cidade atua. Já sai com a primeira busca sugerida pronta.' },
+      { nome: 'Convite de equipe', rota: '/convite/:token', fase: 'v2' }
+    ]
+  },
+  {
+    nome: 'Núcleo do produto', desc: 'Onde o usuário passa 95% do tempo. Busca, resultado, lista. Se essas três forem boas, o produto é bom.',
+    itens: [
+      { nome: 'Nova busca', rota: '/app/buscar', fase: 'MVP', obs: 'Nicho, região, raio e filtros. Estima quantos créditos vai custar antes de rodar.', filhos: [
+        { nome: 'Confirmar gasto de crédito', rota: 'modal', fase: 'MVP' },
+        { nome: 'Busca em andamento', rota: 'estado', fase: 'MVP' },
+        { nome: 'Sem créditos', rota: 'modal', fase: 'MVP' }
+      ] },
+      { nome: 'Resultado da busca', rota: '/app/buscas/:id', fase: 'MVP', obs: 'Tabela, filtros (sem site, nota mínima, nº de avaliações), seleção múltipla e exportação.', filhos: [
+        { nome: 'Detalhe do lead', rota: 'drawer', fase: 'MVP' },
+        { nome: 'Painel de filtros', rota: 'drawer', fase: 'MVP' },
+        { nome: 'Exportar seleção', rota: 'modal', fase: 'MVP' },
+        { nome: 'Salvar como lista', rota: 'modal', fase: 'v1' },
+        { nome: 'Ver no mapa', rota: 'aba', fase: 'v2' }
+      ] },
+      { nome: 'Minhas listas', rota: '/app/listas', fase: 'v1', obs: 'Carteira organizada pelo usuário, separada do histórico bruto de buscas.', filhos: [
+        { nome: 'Detalhe da lista', rota: '/app/listas/:id', fase: 'v1' },
+        { nome: 'Marcar status do contato', rota: 'inline', fase: 'v2' }
+      ] },
+      { nome: 'Histórico de buscas', rota: '/app/historico', fase: 'MVP', obs: 'Toda busca fica salva e reabre sem gastar crédito de novo.' },
+      { nome: 'Exportações', rota: '/app/exportacoes', fase: 'v1', obs: 'Fila e links dos arquivos gerados. Só aparece quando existir exportação assíncrona.' },
+      { nome: 'Painel', rota: '/app', fase: 'v2', obs: 'Consumo de crédito, nichos mais buscados, taxa de "sem site". Só faz sentido depois que houver histórico para resumir.' }
+    ]
+  },
+  {
+    nome: 'Conta e cobrança', desc: 'Área de visita rara. Fica agrupada em abas de uma única rota em vez de virar cinco destinos na sidebar.',
+    itens: [
+      { nome: 'Perfil', rota: '/app/conta', fase: 'MVP' },
+      { nome: 'Plano e créditos', rota: '/app/conta/plano', fase: 'MVP', obs: 'Consumo do mês, limite e upgrade. É a tela que fecha a venda dentro do produto.', filhos: [
+        { nome: 'Checkout', rota: '/app/checkout', fase: 'MVP' },
+        { nome: 'Comprar crédito extra', rota: 'modal', fase: 'v1' },
+        { nome: 'Cancelar assinatura', rota: 'modal', fase: 'v1' }
+      ] },
+      { nome: 'Faturas', rota: '/app/conta/faturas', fase: 'v1' },
+      { nome: 'Equipe', rota: '/app/conta/equipe', fase: 'v2', obs: 'Convite, papel e crédito por usuário. Necessário para o plano Agência.' },
+      { nome: 'Notificações', rota: '/app/conta/notificacoes', fase: 'v2' },
+      { nome: 'Encerrar conta', rota: '/app/conta/encerrar', fase: 'v1', obs: 'Exigência de LGPD, não é opcional.' }
+    ]
+  },
+  {
+    nome: 'Admin interno', desc: 'Só a sua equipe vê. Pode ser feio, mas não pode não existir — sem isso você não sabe quanto está gastando de API por cliente.',
+    itens: [
+      { nome: 'Clientes', rota: '/admin/clientes', fase: 'v1' },
+      { nome: 'Buscas e consumo', rota: '/admin/buscas', fase: 'v1', obs: 'Custo de API por busca e por cliente. É onde a margem do negócio aparece ou desaparece.' },
+      { nome: 'Cupons e cortesias', rota: '/admin/cupons', fase: 'v2' },
+      { nome: 'Fila e erros', rota: '/admin/fila', fase: 'v1' }
+    ]
+  }
+];
+
+const LIMITE = { 'MVP': 0, 'MVP + v1': 1, 'Tudo': 2 };
+const RANK = { 'MVP': 0, 'v1': 1, 'v2': 2 };
+
+class Component extends DCLogic {
+  renderVals() {
+    const escopo = this.props.escopo ?? 'Tudo';
+    const mostrarObs = this.props.mostrarObs ?? true;
+    const key = escopo + '|' + mostrarObs;
+    if (this._key === key) return this._v;
+
+    const teto = LIMITE[escopo] ?? 2;
+    let rotas = 0, secundarios = 0;
+    const areas = [];
+
+    AREAS.forEach(a => {
+      const itens = [];
+      a.itens.forEach(s => {
+        if ((RANK[s.fase] ?? 2) > teto) return;
+        rotas++;
+        const filhos = (s.filhos || []).filter(f => (RANK[f.fase] ?? 2) <= teto);
+        filhos.forEach(f => { if (f.rota.indexOf('/') === 0) rotas++; else secundarios++; });
+        itens.push({
+          nome: s.nome, rota: s.rota, fase: s.fase,
+          obs: s.obs || '', obsVisivel: mostrarObs && !!s.obs, filhos
+        });
+      });
+      if (!itens.length) return;
+      const rotasArea = itens.length + itens.reduce((n, s) => n + s.filhos.filter(f => f.rota.indexOf('/') === 0).length, 0);
+      areas.push({ nome: a.nome, desc: a.desc, contagem: rotasArea + ' rotas', itens });
+    });
+
+    const cauda = escopo === 'Tudo'
+      ? 'fase MVP é o que precisa existir para cobrar o primeiro cliente'
+      : 'mostrando só o escopo ' + escopo;
+    this._key = key;
+    this._v = {
+      areas,
+      resumo: rotas + ' rotas e ' + secundarios + ' overlays, abas e estados aninhados · ' + cauda
+    };
+    return this._v;
+  }
+}
+
+</script>
+</body>
+</html>

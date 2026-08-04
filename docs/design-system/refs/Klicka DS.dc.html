@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="nocturne.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<style>
+html { scroll-behavior: smooth; }
+body { margin: 0; }
+a:hover { color: var(--color-accent-300); }
+@keyframes klRise { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--color-bg);display:grid;grid-template-columns:232px 1fr">
+
+  <aside style="position:sticky;top:0;height:100vh;overflow-y:auto;padding:24px 20px;border-right:1px solid var(--color-divider);display:flex;flex-direction:column;gap:26px">
+    <img src="klicka-logo.png" alt="klicka." style="height:20px;width:auto;align-self:flex-start;flex:none">
+    <div style="display:flex;flex-direction:column;gap:22px;font-size:13px">
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-neutral-600)">Fundamentos</span>
+        <a href="#cor" style="color:var(--color-neutral-300);text-decoration:none">Cor</a>
+        <a href="#tipo" style="color:var(--color-neutral-300);text-decoration:none">Tipografia</a>
+        <a href="#espaco" style="color:var(--color-neutral-300);text-decoration:none">Espaço e elevação</a>
+        <a href="#icones" style="color:var(--color-neutral-300);text-decoration:none">Ícones</a>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-neutral-600)">Componentes</span>
+        <a href="#botoes" style="color:var(--color-neutral-300);text-decoration:none">Botões e tags</a>
+        <a href="#forms" style="color:var(--color-neutral-300);text-decoration:none">Campos e forms</a>
+        <a href="#tabela" style="color:var(--color-neutral-300);text-decoration:none">Tabela e paginação</a>
+        <a href="#cards" style="color:var(--color-neutral-300);text-decoration:none">Cards e métricas</a>
+        <a href="#overlays" style="color:var(--color-neutral-300);text-decoration:none">Modal, drawer, toast</a>
+        <a href="#vazio" style="color:var(--color-neutral-300);text-decoration:none">Estados vazios</a>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-neutral-600)">Padrões</span>
+        <a href="#shell" style="color:var(--color-neutral-300);text-decoration:none">Shell do app</a>
+        <a href="#regras" style="color:var(--color-neutral-300);text-decoration:none">Regras</a>
+      </div>
+    </div>
+  </aside>
+
+  <main style="min-width:0;padding:64px 56px 120px;max-width:1000px">
+    <span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-accent)">Design system</span>
+    <h1 style="font-size:52px;letter-spacing:-.03em;margin:14px 0 16px">A referência da klicka.</h1>
+    <p style="font-size:17px;color:var(--color-neutral-300);max-width:56ch;margin:0 0 20px">Toda tela nova sai daqui. Se um padrão não existe nesta página, ele é criado aqui primeiro e só depois vai pro produto — é isso que impede o app de virar sete dialetos diferentes.</p>
+    <p class="text-muted" style="font-size:14px;max-width:56ch;margin:0">Base: <strong style="color:var(--color-text);font-weight:500">Nocturne</strong>. Fonte única de estilo: <code style="font-family:ui-monospace,monospace;font-size:13px;color:var(--color-accent-300)">nocturne.css</code>. Nenhuma tela escreve hex ou px que já exista como token.</p>
+
+    <div style="height:1px;background:linear-gradient(to right, var(--color-divider), transparent);margin:64px 0 0"></div>
+
+    <section id="cor" style="padding-top:56px">
+      <h2 style="font-size:30px;letter-spacing:-.02em;margin:0 0 8px">Cor</h2>
+      <p class="text-muted" style="font-size:14px;max-width:60ch;margin:0 0 32px">Fundo escuro quase neutro, um accent blurple. O contraste vem das rampas tonais, não da saturação. O accent é linha, borda e brilho — nunca preenchimento de área grande.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:36px">
+        <div>
+          <div style="height:76px;border-radius:var(--radius-md);background:var(--color-bg);box-shadow:var(--shadow-sm)"></div>
+          <div style="font-size:13px;margin-top:8px">Fundo</div>
+          <div class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace">--color-bg</div>
+        </div>
+        <div>
+          <div style="height:76px;border-radius:var(--radius-md);background:var(--color-surface)"></div>
+          <div style="font-size:13px;margin-top:8px">Superfície</div>
+          <div class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace">--color-surface</div>
+        </div>
+        <div>
+          <div style="height:76px;border-radius:var(--radius-md);background:var(--color-text)"></div>
+          <div style="font-size:13px;margin-top:8px">Texto</div>
+          <div class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace">--color-text</div>
+        </div>
+        <div>
+          <div style="height:76px;border-radius:var(--radius-md);background:var(--color-accent)"></div>
+          <div style="font-size:13px;margin-top:8px">Accent</div>
+          <div class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace">--color-accent</div>
+        </div>
+        <div>
+          <div style="height:76px;border-radius:var(--radius-md);background:linear-gradient(120deg, var(--color-section), var(--color-section-glow))"></div>
+          <div style="font-size:13px;margin-top:8px">Faixa de presença</div>
+          <div class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace">--color-section</div>
+        </div>
+      </div>
+
+      <h5 style="margin:0 0 12px">Rampa neutra — superfícies, bordas, texto secundário</h5>
+      <div style="display:flex;border-radius:var(--radius-md);overflow:hidden;margin-bottom:8px">
+        <div style="flex:1;height:52px;background:var(--color-neutral-100)"></div>
+        <div style="flex:1;height:52px;background:var(--color-neutral-200)"></div>
+        <div style="flex:1;height:52px;background:var(--color-neutral-300)"></div>
+        <div style="flex:1;height:52px;background:var(--color-neutral-400)"></div>
+        <div style="flex:1;height:52px;background:var(--color-neutral-500)"></div>
+        <div style="flex:1;height:52px;background:var(--color-neutral-600)"></div>
+        <div style="flex:1;height:52px;background:var(--color-neutral-700)"></div>
+        <div style="flex:1;height:52px;background:var(--color-neutral-800)"></div>
+        <div style="flex:1;height:52px;background:var(--color-neutral-900)"></div>
+      </div>
+      <div style="display:flex;gap:0;font-size:10px;font-family:ui-monospace,monospace;color:var(--color-neutral-600);margin-bottom:28px">
+        <span style="flex:1">100</span><span style="flex:1">200</span><span style="flex:1">300</span><span style="flex:1">400</span><span style="flex:1">500</span><span style="flex:1">600</span><span style="flex:1">700</span><span style="flex:1">800</span><span style="flex:1">900</span>
+      </div>
+
+      <h5 style="margin:0 0 12px">Rampa do accent — estados, tints, texto em accent</h5>
+      <div style="display:flex;border-radius:var(--radius-md);overflow:hidden;margin-bottom:8px">
+        <div style="flex:1;height:52px;background:var(--color-accent-100)"></div>
+        <div style="flex:1;height:52px;background:var(--color-accent-200)"></div>
+        <div style="flex:1;height:52px;background:var(--color-accent-300)"></div>
+        <div style="flex:1;height:52px;background:var(--color-accent-400)"></div>
+        <div style="flex:1;height:52px;background:var(--color-accent-500)"></div>
+        <div style="flex:1;height:52px;background:var(--color-accent-600)"></div>
+        <div style="flex:1;height:52px;background:var(--color-accent-700)"></div>
+        <div style="flex:1;height:52px;background:var(--color-accent-800)"></div>
+        <div style="flex:1;height:52px;background:var(--color-accent-900)"></div>
+      </div>
+      <div style="display:flex;font-size:10px;font-family:ui-monospace,monospace;color:var(--color-neutral-600);margin-bottom:28px">
+        <span style="flex:1">100</span><span style="flex:1">200</span><span style="flex:1">300</span><span style="flex:1">400</span><span style="flex:1">500</span><span style="flex:1">600</span><span style="flex:1">700</span><span style="flex:1">800</span><span style="flex:1">900</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+        <div class="card elev-sm" style="padding:18px">
+          <div class="card-kicker" style="color:var(--color-accent-300)">Regra</div>
+          <p class="card-body" style="font-size:13px">No escuro: passos 700–900 para preenchimento tintado, hover e borda sutil. 500 é a base do papel. 100–300 para texto sobre esses tints.</p>
+        </div>
+        <div class="card elev-sm" style="padding:18px">
+          <div class="card-kicker" style="color:var(--color-accent-300)">Regra</div>
+          <p class="card-body" style="font-size:13px">Accent puro atinge 3:1 — serve para ícone, texto grande e cromo de interface. Para texto corrido em accent use <code style="font-family:ui-monospace,monospace">--color-accent-300</code>.</p>
+        </div>
+        <div class="card elev-sm" style="padding:18px">
+          <div class="card-kicker" style="color:var(--color-accent-300)">Regra</div>
+          <p class="card-body" style="font-size:13px">O sistema é mono: existe um accent só. <code style="font-family:ui-monospace,monospace">--color-accent-2-*</code> é um substituto derivado por máquina, lê igual — trate como o mesmo papel.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="tipo" style="padding-top:72px">
+      <h2 style="font-size:30px;letter-spacing:-.02em;margin:0 0 8px">Tipografia</h2>
+      <p class="text-muted" style="font-size:14px;max-width:60ch;margin:0 0 32px">Inter sobre Inter, weight 500 nos títulos. Hierarquia é tamanho e espaço — nunca engrossar além de 500.</p>
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;align-items:baseline;gap:24px">
+          <span class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace;width:96px;flex:none">h1 · 42px</span>
+          <h1 style="margin:0">Contatos por nicho</h1>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:24px">
+          <span class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace;width:96px;flex:none">h2 · 32px</span>
+          <h2 style="margin:0">Contatos por nicho</h2>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:24px">
+          <span class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace;width:96px;flex:none">h3 · 25px</span>
+          <h3 style="margin:0">Contatos por nicho</h3>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:24px">
+          <span class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace;width:96px;flex:none">h4 · 20px</span>
+          <h4 style="margin:0">Contatos por nicho</h4>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:24px">
+          <span class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace;width:96px;flex:none">corpo · 15px</span>
+          <p style="margin:0;max-width:52ch">A klicka varre os negócios locais e devolve nome, telefone, site e reputação de cada um.</p>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:24px">
+          <span class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace;width:96px;flex:none">h6 · 13px</span>
+          <h6 style="margin:0">Rótulo de seção</h6>
+        </div>
+      </div>
+    </section>
+
+    <section id="espaco" style="padding-top:72px">
+      <h2 style="font-size:30px;letter-spacing:-.02em;margin:0 0 8px">Espaço e elevação</h2>
+      <p class="text-muted" style="font-size:14px;max-width:60ch;margin:0 0 32px">Escala densa (0.7×) para o interior dos componentes; raio 8px. Espaço de página é maior e vive fora dos tokens — seções respiram 88–110px.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:40px">
+        <div style="display:flex;align-items:center;gap:16px"><span class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace;width:80px">space-1</span><span style="height:14px;width:var(--space-1);background:var(--color-accent)"></span><span class="text-muted" style="font-size:11px">2.8px</span></div>
+        <div style="display:flex;align-items:center;gap:16px"><span class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace;width:80px">space-2</span><span style="height:14px;width:var(--space-2);background:var(--color-accent)"></span><span class="text-muted" style="font-size:11px">5.6px</span></div>
+        <div style="display:flex;align-items:center;gap:16px"><span class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace;width:80px">space-3</span><span style="height:14px;width:var(--space-3);background:var(--color-accent)"></span><span class="text-muted" style="font-size:11px">8.4px</span></div>
+        <div style="display:flex;align-items:center;gap:16px"><span class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace;width:80px">space-4</span><span style="height:14px;width:var(--space-4);background:var(--color-accent)"></span><span class="text-muted" style="font-size:11px">11.2px</span></div>
+        <div style="display:flex;align-items:center;gap:16px"><span class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace;width:80px">space-6</span><span style="height:14px;width:var(--space-6);background:var(--color-accent)"></span><span class="text-muted" style="font-size:11px">16.8px</span></div>
+        <div style="display:flex;align-items:center;gap:16px"><span class="text-muted" style="font-size:11px;font-family:ui-monospace,monospace;width:80px">space-8</span><span style="height:14px;width:var(--space-8);background:var(--color-accent)"></span><span class="text-muted" style="font-size:11px">22.4px</span></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px">
+        <div style="padding:22px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+          <div style="font-size:13px">elev-sm</div>
+          <div class="text-muted" style="font-size:11px;margin-top:4px">fio de 1px — cards em lista</div>
+        </div>
+        <div style="padding:22px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-md)">
+          <div style="font-size:13px">elev-md</div>
+          <div class="text-muted" style="font-size:11px;margin-top:4px">painel de resultado, dropdown</div>
+        </div>
+        <div style="padding:22px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-lg)">
+          <div style="font-size:13px">elev-lg</div>
+          <div class="text-muted" style="font-size:11px;margin-top:4px">modal e drawer, só eles</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="icones" style="padding-top:72px">
+      <h2 style="font-size:30px;letter-spacing:-.02em;margin:0 0 8px">Ícones</h2>
+      <p class="text-muted" style="font-size:14px;max-width:60ch;margin:0 0 28px">Phosphor, peso regular, sempre em <code style="font-family:ui-monospace,monospace">currentColor</code>. 16px em linha de texto, 20–22px em cabeçalho de card, 17px dentro de botão.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        <span style="display:flex;flex-direction:column;align-items:center;gap:7px;width:88px;padding:14px 6px;border-radius:var(--radius-md);background:var(--color-surface)"><i class="ph ph-magnifying-glass" style="font-size:22px;color:var(--color-accent)"></i><span class="text-muted" style="font-size:10px;font-family:ui-monospace,monospace">busca</span></span>
+        <span style="display:flex;flex-direction:column;align-items:center;gap:7px;width:88px;padding:14px 6px;border-radius:var(--radius-md);background:var(--color-surface)"><i class="ph ph-map-pin" style="font-size:22px;color:var(--color-accent)"></i><span class="text-muted" style="font-size:10px;font-family:ui-monospace,monospace">região</span></span>
+        <span style="display:flex;flex-direction:column;align-items:center;gap:7px;width:88px;padding:14px 6px;border-radius:var(--radius-md);background:var(--color-surface)"><i class="ph ph-funnel" style="font-size:22px;color:var(--color-accent)"></i><span class="text-muted" style="font-size:10px;font-family:ui-monospace,monospace">filtro</span></span>
+        <span style="display:flex;flex-direction:column;align-items:center;gap:7px;width:88px;padding:14px 6px;border-radius:var(--radius-md);background:var(--color-surface)"><i class="ph ph-download-simple" style="font-size:22px;color:var(--color-accent)"></i><span class="text-muted" style="font-size:10px;font-family:ui-monospace,monospace">exportar</span></span>
+        <span style="display:flex;flex-direction:column;align-items:center;gap:7px;width:88px;padding:14px 6px;border-radius:var(--radius-md);background:var(--color-surface)"><i class="ph ph-phone" style="font-size:22px;color:var(--color-accent)"></i><span class="text-muted" style="font-size:10px;font-family:ui-monospace,monospace">telefone</span></span>
+        <span style="display:flex;flex-direction:column;align-items:center;gap:7px;width:88px;padding:14px 6px;border-radius:var(--radius-md);background:var(--color-surface)"><i class="ph ph-star" style="font-size:22px;color:var(--color-accent)"></i><span class="text-muted" style="font-size:10px;font-family:ui-monospace,monospace">nota</span></span>
+        <span style="display:flex;flex-direction:column;align-items:center;gap:7px;width:88px;padding:14px 6px;border-radius:var(--radius-md);background:var(--color-surface)"><i class="ph ph-clock-counter-clockwise" style="font-size:22px;color:var(--color-accent)"></i><span class="text-muted" style="font-size:10px;font-family:ui-monospace,monospace">histórico</span></span>
+        <span style="display:flex;flex-direction:column;align-items:center;gap:7px;width:88px;padding:14px 6px;border-radius:var(--radius-md);background:var(--color-surface)"><i class="ph ph-user-circle" style="font-size:22px;color:var(--color-accent)"></i><span class="text-muted" style="font-size:10px;font-family:ui-monospace,monospace">conta</span></span>
+        <span style="display:flex;flex-direction:column;align-items:center;gap:7px;width:88px;padding:14px 6px;border-radius:var(--radius-md);background:var(--color-surface)"><i class="ph ph-lightning" style="font-size:22px;color:var(--color-accent)"></i><span class="text-muted" style="font-size:10px;font-family:ui-monospace,monospace">créditos</span></span>
+      </div>
+    </section>
+
+    <div style="height:1px;background:linear-gradient(to right, var(--color-divider), transparent);margin:80px 0 0"></div>
+
+    <section id="botoes" style="padding-top:56px">
+      <h2 style="font-size:30px;letter-spacing:-.02em;margin:0 0 8px">Botões e tags</h2>
+      <p class="text-muted" style="font-size:14px;max-width:60ch;margin:0 0 28px">A ação primária é contorno de accent — nunca preenchimento sólido. Uma primária por tela. Secundária carrega o resto, ghost carrega ação de baixo peso.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:24px;border-radius:var(--radius-md);background:var(--color-surface);margin-bottom:12px">
+        <button class="btn btn-primary">Buscar contatos</button>
+        <button class="btn btn-secondary">Cancelar</button>
+        <button class="btn btn-ghost">Ver histórico</button>
+        <button class="btn btn-icon btn-secondary"><i class="ph ph-funnel" style="font-size:16px"></i></button>
+        <button class="btn btn-primary" disabled>Sem créditos</button>
+        <button class="btn btn-primary" style="min-height:44px;padding-inline:22px;font-size:15px"><i class="ph ph-magnifying-glass" style="font-size:17px"></i> Grande (44px, hero)</button>
+      </div>
+      <p class="text-muted" style="font-size:13px;margin:0 0 32px">Alturas: 36px no app, 44px em hero e formulário de conversão. Ícone sempre à esquerda do rótulo.</p>
+
+      <h5 style="margin:0 0 12px">Tags</h5>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:24px;border-radius:var(--radius-md);background:var(--color-surface)">
+        <span class="tag tag-accent">sem site</span>
+        <span class="tag tag-neutral">CSV</span>
+        <span class="tag tag-outline">enviar pro CRM</span>
+        <span class="tag tag-accent">novo</span>
+        <span class="tag tag-neutral">já exportado</span>
+      </div>
+      <p class="text-muted" style="font-size:13px;margin:12px 0 0">Tag de accent marca oportunidade e novidade. Tag neutra é metadado. Tag de contorno é ação disponível, não estado.</p>
+    </section>
+
+    <section id="forms" style="padding-top:72px">
+      <h2 style="font-size:30px;letter-spacing:-.02em;margin:0 0 8px">Campos e forms</h2>
+      <p class="text-muted" style="font-size:14px;max-width:60ch;margin:0 0 28px">Elementos nativos, estados tematizados. Rótulo sempre acima, 12px. Foco é borda de accent, nunca o anel azul do browser.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;padding:24px;border-radius:var(--radius-md);background:var(--color-surface)">
+        <div class="field">
+          <label for="ds-a">Nicho</label>
+          <select class="input" id="ds-a"><option>Odontologia</option><option>Pet shops</option></select>
+        </div>
+        <div class="field">
+          <label for="ds-b">Região</label>
+          <input class="input" id="ds-b" placeholder="Cidade, estado">
+        </div>
+        <div class="field">
+          <label for="ds-c">Com erro</label>
+          <input class="input" id="ds-c" value="curtiba" style="border-color:var(--color-accent-400)">
+          <div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--color-accent-300)"><i class="ph ph-warning-circle" style="font-size:14px"></i>Cidade não encontrada no Maps</div>
+        </div>
+        <div class="field">
+          <label for="ds-d">Desabilitado</label>
+          <input class="input" id="ds-d" value="Aguardando plano" disabled style="opacity:.45">
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label for="ds-e">Observação</label>
+          <textarea class="input" id="ds-e" placeholder="Anote o contexto da lista"></textarea>
+        </div>
+        <div style="grid-column:1/-1;display:flex;flex-wrap:wrap;gap:22px;align-items:center">
+          <label class="radio"><input type="radio" name="ds-r" checked><span class="dot"></span>Todos os negócios</label>
+          <label class="radio"><input type="radio" name="ds-r"><span class="dot"></span>Só quem não tem site</label>
+          <span class="seg">
+            <label class="seg-opt"><input type="radio" name="ds-s" checked>Tabela</label>
+            <label class="seg-opt"><input type="radio" name="ds-s">Mapa</label>
+            <label class="seg-opt"><input type="radio" name="ds-s">Cards</label>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <section id="tabela" style="padding-top:72px">
+      <h2 style="font-size:30px;letter-spacing:-.02em;margin:0 0 8px">Tabela e paginação</h2>
+      <p class="text-muted" style="font-size:14px;max-width:60ch;margin:0 0 28px">O componente central do produto. Cabeçalho em maiúscula 11px, régua de linha que desvanece nas pontas, hover de 4% do texto. Número sempre tabular e alinhado à direita.</p>
+      <div style="border-radius:var(--radius-lg);background:var(--color-surface);box-shadow:var(--shadow-md);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 20px">
+          <span style="font-family:var(--font-heading);font-size:15px">248 contatos</span>
+          <span class="tag tag-neutral">Pet shops · Curitiba</span>
+          <span style="margin-left:auto;display:flex;gap:8px">
+            <button class="btn btn-secondary"><i class="ph ph-funnel" style="font-size:15px"></i> Filtros</button>
+            <button class="btn btn-primary"><i class="ph ph-download-simple" style="font-size:15px"></i> Exportar</button>
+          </span>
+        </div>
+        <table class="table">
+          <thead><tr><th style="padding-left:20px">Empresa</th><th>Telefone</th><th>Site</th><th style="text-align:right">Nota</th><th style="text-align:right;padding-right:20px">Avaliações</th></tr></thead>
+          <tbody>
+            <tr><td style="padding:12px 8px 12px 20px"><div style="font-family:var(--font-heading)">Pet Amigo</div><div class="text-muted" style="font-size:11px;margin-top:2px">Batel, Curitiba</div></td><td style="padding:12px 8px;font-variant-numeric:tabular-nums">(41) 3244-1902</td><td style="padding:12px 8px"><span style="color:var(--color-neutral-300)">petamigo.com.br</span></td><td style="padding:12px 8px;text-align:right;font-variant-numeric:tabular-nums">4.7</td><td class="text-muted" style="padding:12px 20px 12px 8px;text-align:right;font-variant-numeric:tabular-nums">218</td></tr>
+            <tr><td style="padding:12px 8px 12px 20px"><div style="font-family:var(--font-heading)">Mundo Cão</div><div class="text-muted" style="font-size:11px;margin-top:2px">Água Verde, Curitiba</div></td><td style="padding:12px 8px;font-variant-numeric:tabular-nums">(41) 3671-4408</td><td style="padding:12px 8px"><span class="tag tag-accent">sem site</span></td><td style="padding:12px 8px;text-align:right;font-variant-numeric:tabular-nums">4.4</td><td class="text-muted" style="padding:12px 20px 12px 8px;text-align:right;font-variant-numeric:tabular-nums">96</td></tr>
+            <tr><td style="padding:12px 8px 12px 20px"><div style="font-family:var(--font-heading)">Clínica Vet Patinhas</div><div class="text-muted" style="font-size:11px;margin-top:2px">Portão, Curitiba</div></td><td style="padding:12px 8px;font-variant-numeric:tabular-nums">(41) 3390-7712</td><td style="padding:12px 8px"><span style="color:var(--color-neutral-300)">vetpatinhas.com.br</span></td><td style="padding:12px 8px;text-align:right;font-variant-numeric:tabular-nums">4.9</td><td class="text-muted" style="padding:12px 20px 12px 8px;text-align:right;font-variant-numeric:tabular-nums">431</td></tr>
+          </tbody>
+        </table>
+        <div style="display:flex;align-items:center;gap:6px;padding:14px 20px">
+          <span class="text-muted" style="font-size:12px;margin-right:auto">1–3 de 248</span>
+          <button class="btn btn-icon btn-secondary"><i class="ph ph-caret-left" style="font-size:15px"></i></button>
+          <button class="btn btn-secondary" style="min-width:34px;color:var(--color-accent);border-color:var(--color-accent)">1</button>
+          <button class="btn btn-secondary" style="min-width:34px">2</button>
+          <button class="btn btn-secondary" style="min-width:34px">3</button>
+          <span class="text-muted" style="font-size:13px;padding-inline:4px">…</span>
+          <button class="btn btn-icon btn-secondary"><i class="ph ph-caret-right" style="font-size:15px"></i></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="cards" style="padding-top:72px">
+      <h2 style="font-size:30px;letter-spacing:-.02em;margin:0 0 8px">Cards e métricas</h2>
+      <p class="text-muted" style="font-size:14px;max-width:60ch;margin:0 0 28px">Card é superfície com kicker, título, corpo e meta. Métrica de dashboard usa número grande com weight 500 e rótulo de 12px abaixo — sem ícone decorativo, sem seta colorida.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px">
+        <div class="card elev-sm" style="padding:20px;gap:2px">
+          <div class="text-muted" style="font-size:12px">Créditos restantes</div>
+          <div style="font-family:var(--font-heading);font-size:34px;letter-spacing:-.02em;line-height:1.1">1.412</div>
+          <div class="text-muted" style="font-size:11px">de 2.000 no mês</div>
+          <div style="height:3px;border-radius:2px;background:var(--color-neutral-800);margin-top:10px"><div style="height:3px;width:70%;border-radius:2px;background:var(--color-accent)"></div></div>
+        </div>
+        <div class="card elev-sm" style="padding:20px;gap:2px">
+          <div class="text-muted" style="font-size:12px">Buscas no mês</div>
+          <div style="font-family:var(--font-heading);font-size:34px;letter-spacing:-.02em;line-height:1.1">38</div>
+          <div class="text-muted" style="font-size:11px">em 9 nichos</div>
+        </div>
+        <div class="card elev-sm" style="padding:20px;gap:2px">
+          <div class="text-muted" style="font-size:12px">Sem site na carteira</div>
+          <div style="font-family:var(--font-heading);font-size:34px;letter-spacing:-.02em;line-height:1.1">31<span style="font-size:18px;color:var(--color-neutral-400)">%</span></div>
+          <div class="text-muted" style="font-size:11px">744 de 2.398 contatos</div>
+        </div>
+      </div>
+      <div class="card elev-sm" style="padding:20px">
+        <div class="text-muted" style="font-size:12px;margin-bottom:18px">Contatos por semana</div>
+        <div style="display:flex;align-items:flex-end;gap:10px;height:120px">
+          <span style="flex:1;height:38%;background:var(--color-accent-800);border-radius:3px 3px 0 0"></span>
+          <span style="flex:1;height:52%;background:var(--color-accent-800);border-radius:3px 3px 0 0"></span>
+          <span style="flex:1;height:44%;background:var(--color-accent-800);border-radius:3px 3px 0 0"></span>
+          <span style="flex:1;height:71%;background:var(--color-accent-800);border-radius:3px 3px 0 0"></span>
+          <span style="flex:1;height:63%;background:var(--color-accent-800);border-radius:3px 3px 0 0"></span>
+          <span style="flex:1;height:88%;background:var(--color-accent);border-radius:3px 3px 0 0"></span>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:10px">
+          <span class="text-muted" style="flex:1;font-size:10px;text-align:center">s1</span>
+          <span class="text-muted" style="flex:1;font-size:10px;text-align:center">s2</span>
+          <span class="text-muted" style="flex:1;font-size:10px;text-align:center">s3</span>
+          <span class="text-muted" style="flex:1;font-size:10px;text-align:center">s4</span>
+          <span class="text-muted" style="flex:1;font-size:10px;text-align:center">s5</span>
+          <span style="flex:1;font-size:10px;text-align:center;color:var(--color-accent)">s6</span>
+        </div>
+        <p class="text-muted" style="font-size:12px;margin:14px 0 0">Gráfico usa um passo escuro da rampa (<code style="font-family:ui-monospace,monospace">accent-800</code>) e reserva o accent puro para a série ou barra em destaque. Nunca mais de uma cor saturada por gráfico.</p>
+      </div>
+    </section>
+
+    <section id="overlays" style="padding-top:72px">
+      <h2 style="font-size:30px;letter-spacing:-.02em;margin:0 0 8px">Modal, drawer e toast</h2>
+      <p class="text-muted" style="font-size:14px;max-width:60ch;margin:0 0 28px">Modal para decisão que bloqueia (confirmar gasto de crédito). Drawer para detalhe lateral sem perder a lista. Toast para confirmação que não exige resposta. Só eles usam <code style="font-family:ui-monospace,monospace">elev-lg</code>.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;padding:24px;border-radius:var(--radius-md);background:var(--color-surface)">
+        <button class="btn btn-primary" onClick="{{ openDialog }}">Abrir modal</button>
+        <button class="btn btn-secondary" onClick="{{ openDrawer }}">Abrir drawer</button>
+        <button class="btn btn-secondary" onClick="{{ fireToast }}">Disparar toast</button>
+      </div>
+    </section>
+
+    <section id="vazio" style="padding-top:72px">
+      <h2 style="font-size:30px;letter-spacing:-.02em;margin:0 0 8px">Estados vazios</h2>
+      <p class="text-muted" style="font-size:14px;max-width:60ch;margin:0 0 28px">Alinhado à esquerda como o resto do sistema, nunca centralizado no meio da tela. Um ícone, uma frase do que aconteceu, uma do que fazer, uma ação. Sem ilustração.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">
+        <div style="padding:36px 24px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+          <i class="ph ph-magnifying-glass" style="font-size:26px;color:var(--color-neutral-500)"></i>
+          <h4 style="margin:16px 0 6px">Nenhuma busca ainda</h4>
+          <p class="text-muted" style="font-size:13px;max-width:34ch;margin:0 0 18px">Escolha um nicho e uma cidade — a primeira lista sai em menos de um minuto.</p>
+          <button class="btn btn-primary">Fazer a primeira busca</button>
+        </div>
+        <div style="padding:36px 24px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+          <i class="ph ph-funnel-x" style="font-size:26px;color:var(--color-neutral-500)"></i>
+          <h4 style="margin:16px 0 6px">Nada com esses filtros</h4>
+          <p class="text-muted" style="font-size:13px;max-width:34ch;margin:0 0 18px">248 contatos existem nesta busca, mas nenhum atende à combinação atual.</p>
+          <button class="btn btn-secondary">Limpar filtros</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="shell" style="padding-top:72px">
+      <h2 style="font-size:30px;letter-spacing:-.02em;margin:0 0 8px">Shell do app</h2>
+      <p class="text-muted" style="font-size:14px;max-width:60ch;margin:0 0 28px">Toda tela logada usa a mesma moldura: sidebar de 232px com a logo, grupos de navegação e o medidor de crédito no pé; topbar com título da tela à esquerda e a ação primária à direita. A sidebar desta própria página é o padrão.</p>
+      <div style="border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-md);display:grid;grid-template-columns:180px 1fr;min-height:260px;background:var(--color-bg)">
+        <div style="padding:16px;border-right:1px solid var(--color-divider);display:flex;flex-direction:column;gap:16px">
+          <img src="klicka-logo.png" alt="klicka." style="height:15px;width:auto;align-self:flex-start;flex:none">
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+            <span style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--radius-sm);color:var(--color-accent);box-shadow:inset 0 0 0 1px var(--color-accent)"><i class="ph ph-magnifying-glass" style="font-size:14px"></i>Nova busca</span>
+            <span style="display:flex;align-items:center;gap:8px;padding:6px 8px;color:var(--color-neutral-300)"><i class="ph ph-list-checks" style="font-size:14px"></i>Minhas listas</span>
+            <span style="display:flex;align-items:center;gap:8px;padding:6px 8px;color:var(--color-neutral-300)"><i class="ph ph-clock-counter-clockwise" style="font-size:14px"></i>Histórico</span>
+            <span style="display:flex;align-items:center;gap:8px;padding:6px 8px;color:var(--color-neutral-300)"><i class="ph ph-user-circle" style="font-size:14px"></i>Conta</span>
+          </div>
+          <div style="margin-top:auto">
+            <div class="text-muted" style="font-size:10px;margin-bottom:5px">1.412 créditos</div>
+            <div style="height:3px;border-radius:2px;background:var(--color-neutral-800)"><div style="height:3px;width:70%;border-radius:2px;background:var(--color-accent)"></div></div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--color-divider)">
+            <span style="font-family:var(--font-heading);font-size:16px">Minhas listas</span>
+            <span class="btn btn-primary" style="margin-left:auto;font-size:12px;padding:5px 12px">Nova busca</span>
+          </div>
+          <div style="padding:24px 20px;display:flex;flex-direction:column;gap:10px">
+            <div style="height:9px;width:42%;border-radius:3px;background:var(--color-neutral-800)"></div>
+            <div style="height:9px;width:72%;border-radius:3px;background:var(--color-neutral-800)"></div>
+            <div style="height:9px;width:58%;border-radius:3px;background:var(--color-neutral-800)"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="regras" style="padding-top:72px">
+      <h2 style="font-size:30px;letter-spacing:-.02em;margin:0 0 28px">Regras</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:40px">
+        <div>
+          <h5 style="color:var(--color-accent);margin:0 0 16px">Faça</h5>
+          <div style="display:flex;flex-direction:column;gap:12px;font-size:14px;color:var(--color-neutral-300)">
+            <span>Tire toda cor, tipo, espaço e sombra dos tokens do <code style="font-family:ui-monospace,monospace">nocturne.css</code>.</span>
+            <span>Alinhe à esquerda e deixe o respiro sobrar à direita.</span>
+            <span>Uma ação primária por tela, em contorno de accent.</span>
+            <span>Deixe o <code style="font-family:ui-monospace,monospace">:focus-visible</code> carregar o accent.</span>
+            <span>Use a rampa neutra para superfície, borda e texto secundário.</span>
+          </div>
+        </div>
+        <div>
+          <h5 style="color:var(--color-neutral-400);margin:0 0 16px">Não faça</h5>
+          <div style="display:flex;flex-direction:column;gap:12px;font-size:14px;color:var(--color-neutral-300)">
+            <span>Não inunde área grande com accent nem com qualquer cor saturada.</span>
+            <span>Não use preto puro, branco puro, nem hex fora das rampas.</span>
+            <span>Não empilhe sombra: no escuro, elevação é fio mais escuridão ambiente.</span>
+            <span>Não engrosse título além do weight 500 — hierarquia é tamanho e espaço.</span>
+            <span>Não centralize estado vazio nem título de tela.</span>
+            <span>Não use emoji e não desenhe ilustração em SVG.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <sc-if value="{{ dialogOpen }}" hint-placeholder-val="{{ false }}">
+    <div class="dialog-backdrop" style="z-index:80" onClick="{{ closeDialog }}">
+      <div class="dialog" style="animation:klRise .16s ease-out">
+        <div class="dialog-title">Gastar 248 créditos?</div>
+        <p class="dialog-body" style="margin:0">Essa busca vai consumir 248 dos seus 1.412 créditos do mês. Contatos que já saíram em busca anterior não são cobrados de novo.</p>
+        <div class="dialog-actions">
+          <button class="btn btn-secondary" onClick="{{ closeDialog }}">Cancelar</button>
+          <button class="btn btn-primary" onClick="{{ closeDialog }}">Buscar contatos</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ drawerOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;inset:0;z-index:80;background:color-mix(in srgb, var(--color-neutral-900) 50%, transparent)" onClick="{{ closeDrawer }}">
+      <div style="position:absolute;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--color-surface);box-shadow:var(--shadow-lg);padding:24px;display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div>
+            <div class="card-kicker">Pet shop · Batel, Curitiba</div>
+            <h3 style="margin:6px 0 0">Pet Amigo</h3>
+          </div>
+          <button class="btn btn-icon btn-secondary" style="margin-left:auto" onClick="{{ closeDrawer }}"><i class="ph ph-x" style="font-size:15px"></i></button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;font-size:14px">
+          <div style="display:flex;justify-content:space-between;gap:12px"><span class="text-muted">Telefone</span><span style="font-variant-numeric:tabular-nums">(41) 3244-1902</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px"><span class="text-muted">Site</span><span>petamigo.com.br</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px"><span class="text-muted">Nota</span><span>4.7 · 218 avaliações</span></div>
+          <div style="display:flex;justify-content:space-between;gap:12px"><span class="text-muted">Categoria</span><span>Pet shop</span></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:auto">
+          <button class="btn btn-primary btn-block" style="margin:0"><i class="ph ph-whatsapp-logo" style="font-size:16px"></i> Abrir WhatsApp</button>
+          <button class="btn btn-secondary btn-block" style="margin:0">Copiar contato</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ toastOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;bottom:24px;right:24px;z-index:90;display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-lg);animation:klRise .18s ease-out">
+      <i class="ph ph-check-circle" style="font-size:18px;color:var(--color-accent)"></i>
+      <span style="font-size:14px">248 contatos exportados em CSV</span>
+      <button class="btn btn-ghost" style="font-size:13px">Desfazer</button>
+    </div>
+  </sc-if>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { dialog: false, drawer: false, toast: false, page: 1 };
+
+  openDialog = () => this.setState({ dialog: true });
+  closeDialog = () => this.setState({ dialog: false });
+  openDrawer = () => this.setState({ drawer: true });
+  closeDrawer = () => this.setState({ drawer: false });
+
+  fireToast = () => {
+    clearTimeout(this._t);
+    this.setState({ toast: true });
+    this._t = setTimeout(() => this.setState({ toast: false }), 2600);
+  };
+
+  componentWillUnmount() { clearTimeout(this._t); }
+
+  renderVals() {
+    return {
+      dialogOpen: this.state.dialog,
+      drawerOpen: this.state.drawer,
+      toastOpen: this.state.toast,
+      openDialog: this.openDialog,
+      closeDialog: this.closeDialog,
+      openDrawer: this.openDrawer,
+      closeDrawer: this.closeDrawer,
+      fireToast: this.fireToast
+    };
+  }
+}
+
+</script>
+</body>
+</html>
