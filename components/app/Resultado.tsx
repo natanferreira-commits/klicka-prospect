@@ -1,10 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
 import Papa from "papaparse";
 import {
-  ArrowLeft, DownloadSimple, CircleNotch, FunnelX, X, Lightning,
+  DownloadSimple, CircleNotch, FunnelX, X, Lightning,
   WhatsappLogo, ListPlus, CheckCircle,
 } from "@phosphor-icons/react";
 import type { SearchResult } from "@/lib/types";
@@ -19,12 +18,22 @@ function waLink(phone: string | null): string | null {
   return `https://wa.me/55${d}`;
 }
 
-export default function Resultado() {
-  const params = useSearchParams();
-  const router = useRouter();
-  const niche = params.get("niche") ?? "";
-  const region = params.get("region") ?? "";
+export type ResultadoSummary = { filtered: number; total: number; semSite: number; status: "loading" | "done" | "error" };
 
+// Corpo do resultado da busca. A tela dona (a busca) desenha a topbar e a barra
+// de busca, e passa o nicho e a região já confirmados. Este componente só cuida
+// de rodar a busca, filtrar, paginar e mostrar a tabela, o drawer e a exportação.
+export default function Resultado({
+  niche, region,
+  onSummary,
+  exportOpen, setExportOpen,
+}: {
+  niche: string;
+  region: string;
+  onSummary?: (s: ResultadoSummary) => void;
+  exportOpen: boolean;
+  setExportOpen: (v: boolean) => void;
+}) {
   const [status, setStatus] = useState<"loading" | "done" | "error">("loading");
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -33,7 +42,7 @@ export default function Resultado() {
   const [sel, setSel] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const [drawer, setDrawer] = useState<string | null>(null);
-  const [exportOpen, setExportOpen] = useState(false);
+  const [reload, setReload] = useState(0);
   const [toast, setToast] = useState(false);
   const headRef = useRef<HTMLInputElement>(null);
 
@@ -61,7 +70,7 @@ export default function Resultado() {
       }
     })();
     return () => { alive = false; };
-  }, [niche, region]);
+  }, [niche, region, reload]);
 
   const filtered = useMemo(() => {
     const min = parseFloat(notaMin) || 0;
@@ -69,6 +78,10 @@ export default function Resultado() {
   }, [results, semSite, notaMin]);
 
   const semSiteCount = results.filter((r) => !isRealWebsite(r.website)).length;
+
+  useEffect(() => {
+    onSummary?.({ filtered: filtered.length, total: results.length, semSite: semSiteCount, status });
+  }, [filtered.length, results.length, semSiteCount, status, onSummary]);
   const pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const cur = Math.min(page, pages);
   const start = (cur - 1) * PER_PAGE;
@@ -98,7 +111,7 @@ export default function Resultado() {
     const csv = Papa.unparse(chosen.map((r) => ({
       Nome: r.name, Telefone: r.phone ?? "", Site: r.website ?? "",
       Nota: r.rating ?? "", Avaliacoes: r.reviewCount ?? "",
-      Endereco: r.address, Maps: r.googleMapsUri ?? "",
+      Endereco: r.address,
     })));
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
     const a = document.createElement("a");
@@ -115,20 +128,6 @@ export default function Resultado() {
 
   return (
     <div>
-      {/* topbar */}
-      <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 32px", borderBottom: "1px solid var(--color-divider)" }}>
-        <button className="btn btn-icon btn-secondary" onClick={() => router.push("/app/buscar")}><ArrowLeft size={15} /></button>
-        <span style={{ fontFamily: "var(--font-heading)", fontSize: 16 }}>{niche} em {cidade}</span>
-        {status === "done" && (
-          <span className="text-muted" style={{ fontSize: 13 }}>
-            {filtered.length} de {results.length} contatos · {semSiteCount} sem site
-          </span>
-        )}
-        <button className="btn btn-primary" onClick={() => setExportOpen(true)} style={{ marginLeft: "auto" }} disabled={status !== "done" || filtered.length === 0}>
-          <DownloadSimple size={15} /> Exportar
-        </button>
-      </div>
-
       <div style={{ padding: "32px 32px 120px" }}>
         {/* filtros */}
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 16, marginBottom: 26 }}>
@@ -165,7 +164,7 @@ export default function Resultado() {
             <div style={{ padding: "18px 8px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 14px 18px" }}>
                 <CircleNotch size={16} color="var(--color-accent)" style={{ animation: "klSpin .8s linear infinite" }} />
-                <span className="text-muted" style={{ fontSize: 13 }}>Varrendo o mapa em {cidade}…</span>
+                <span className="text-muted" style={{ fontSize: 13 }}>Varrendo {cidade}…</span>
               </div>
               {[...Array(8)].map((_, i) => (
                 <div key={i} style={{ display: "flex", gap: 16, padding: "13px 14px", animation: "klPulse 1.1s ease-in-out infinite" }}>
@@ -182,7 +181,7 @@ export default function Resultado() {
             <div style={{ padding: "56px 32px" }}>
               <h4 style={{ margin: "0 0 6px" }}>Deu erro na busca</h4>
               <p className="text-muted" style={{ fontSize: 13, margin: "0 0 18px" }}>{error}</p>
-              <button className="btn btn-secondary" onClick={() => router.push("/app/buscar")}>Voltar</button>
+              <button className="btn btn-secondary" onClick={() => setReload((n) => n + 1)}>Tentar de novo</button>
             </div>
           )}
 
@@ -270,7 +269,7 @@ export default function Resultado() {
             {!isRealWebsite(lead.website) && (
               <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "11px 14px", borderRadius: "var(--radius-md)", boxShadow: "inset 0 0 0 1px var(--color-accent)" }}>
                 <Lightning size={16} color="var(--color-accent)" />
-                <span style={{ fontSize: 13, color: "var(--color-accent-300)" }}>Não tem site — oportunidade quente</span>
+                <span style={{ fontSize: 13, color: "var(--color-accent-300)" }}>Não tem site. Oportunidade quente</span>
               </div>
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: 13, fontSize: 14 }}>
@@ -304,7 +303,7 @@ export default function Resultado() {
             <div>
               <div className="text-muted" style={{ fontSize: 12, marginBottom: 8 }}>Campos incluídos</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {["Nome", "Telefone", "Site", "Nota", "Avaliações", "Endereço", "Link do Maps"].map((f) => <span key={f} className="tag tag-neutral">{f}</span>)}
+                {["Nome", "Telefone", "Site", "Nota", "Avaliações", "Endereço"].map((f) => <span key={f} className="tag tag-neutral">{f}</span>)}
               </div>
             </div>
             <div className="dialog-actions">
@@ -319,7 +318,7 @@ export default function Resultado() {
       {toast && (
         <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 90, display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: "var(--radius-md)", background: "var(--color-surface)", boxShadow: "var(--shadow-lg)" }}>
           <CheckCircle size={18} color="var(--color-accent)" />
-          <span style={{ fontSize: 14 }}>Arquivo gerado — o download começou</span>
+          <span style={{ fontSize: 14 }}>Arquivo gerado, o download começou</span>
         </div>
       )}
     </div>
