@@ -36,7 +36,20 @@ export async function getUsage(userId: string): Promise<UsageSnapshot> {
   };
 }
 
+// Contas internas/dono com crédito liberado. Os e-mails ficam em
+// KLICKA_UNLIMITED_EMAILS (separados por vírgula), fora do código, porque o
+// repo é público. Quem não está na lista segue o limite normal do plano.
+const UNLIMITED_CREDITS = 1_000_000;
+
+export function isUnlimited(user: AppUser): boolean {
+  const raw = process.env.KLICKA_UNLIMITED_EMAILS ?? "";
+  if (!raw.trim() || !user.email) return false;
+  const list = raw.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+  return list.includes(user.email.toLowerCase());
+}
+
 export function creditsRemaining(user: AppUser, usage: UsageSnapshot): number {
+  if (isUnlimited(user)) return UNLIMITED_CREDITS;
   return Math.max(0, user.plan.limits.creditsPerMonth - usage.creditsUsed);
 }
 
